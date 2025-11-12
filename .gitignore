@@ -1,0 +1,5 @@
+# Tests
+coverage/
+
+# Build
+giac

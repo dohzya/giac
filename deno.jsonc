@@ -1,0 +1,48 @@
+{
+  "$schema": "https://docs.deno.com/schemas/deno.jsonc",
+  "lock": true,
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "useUnknownInCatchVariables": true
+  },
+  "imports": {
+    "@std/yaml": "jsr:@std/yaml@^1.0",
+    "@std/assert": "jsr:@std/assert@^1.0",
+    "zod": "npm:zod@4",
+    "~/": "./"
+  },
+  "permissions": {
+    "default": {
+      "read": ["./spec.yml"],
+      "env": [
+        "TELISME_VALUE",
+        "CHALLENGE_VALUE",
+        "CONFRONTATION_VALUE",
+        "DENSITY_VALUE",
+        "ENERGY_VALUE",
+        "REGISTER_VALUE",
+        "GIAC_LANG"
+      ]
+    },
+    "tests": {
+      "read": ["./", "./spec.yml"],
+      "env": [
+        "TELISME_VALUE",
+        "CHALLENGE_VALUE",
+        "CONFRONTATION_VALUE",
+        "DENSITY_VALUE",
+        "ENERGY_VALUE",
+        "REGISTER_VALUE",
+        "GIAC_LANG"
+      ]
+    }
+  },
+  "tasks": {
+    "lint": "deno lint && deno check mod.ts",
+    "test": "deno test -P=tests --coverage=coverage",
+    "dev": "deno run -P mod.ts",
+    "compile": "deno compile -P --output giac mod.ts",
+    "finalize": "deno fmt && deno task lint && deno task test && deno task compile"
+  }
+}
