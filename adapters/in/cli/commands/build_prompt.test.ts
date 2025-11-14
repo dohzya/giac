@@ -7,7 +7,7 @@ import { executeBuildPrompt } from "./build_prompt.ts";
 import type { BuildPromptUseCase } from "~/core/application/ports/in/build_prompt.ts";
 import type { GetSpecUseCase } from "~/core/application/ports/in/get_spec.ts";
 import type { Spec } from "~/core/domain/spec.ts";
-import type { Profile, PartialProfile } from "~/core/domain/profile.ts";
+import type { PartialProfile, Profile } from "~/core/domain/profile.ts";
 import type { Level } from "~/core/domain/axis.ts";
 
 // Test fixtures (inline)
@@ -233,13 +233,16 @@ Deno.test("executeBuildPrompt - prompts for missing axes (interactive mode)", as
     _spec: Spec,
     _partial: PartialProfile,
     _lang: "fr" | "en",
-  ): Promise<Profile> => Promise.resolve({
-    telisme: 1,
-    confrontation: 2,
-    density: 3,
-    energy: 4,
-    register: 5,
-  } as const);
+  ): Promise<Profile> =>
+    Promise.resolve(
+      {
+        telisme: 1,
+        confrontation: 2,
+        density: 3,
+        energy: 4,
+        register: 5,
+      } as const,
+    );
 
   const originalExit = Deno.exit;
   let exitCalled = false;

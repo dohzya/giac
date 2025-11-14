@@ -16,7 +16,8 @@ export async function executeBuildPrompt(
   getSpec: GetSpecUseCase,
   buildPrompt: BuildPromptUseCase,
   args: string[],
-  buildProfileInteractivelyFn: typeof defaultBuildProfileInteractively = defaultBuildProfileInteractively,
+  buildProfileInteractivelyFn: typeof defaultBuildProfileInteractively =
+    defaultBuildProfileInteractively,
 ): Promise<void> {
   try {
     const spec = await getSpec.execute();
