@@ -19,7 +19,11 @@ export function parseArgsSimple(
   let i = 0;
 
   while (i < args.length) {
-    const arg = args[i]!;
+    const arg = args[i];
+    if (arg === undefined) {
+      i++;
+      continue;
+    }
 
     if (arg.startsWith("-") && arg.includes("=")) {
       const dashCount = arg.startsWith("--") ? 2 : 1;
@@ -35,8 +39,9 @@ export function parseArgsSimple(
 
     if (arg.startsWith("--")) {
       const key = arg.substring(2);
-      if (i + 1 < args.length && !args[i + 1]!.startsWith("-")) {
-        result[key] = args[i + 1]!;
+      const nextArg = args[i + 1];
+      if (nextArg && !nextArg.startsWith("-")) {
+        result[key] = nextArg;
         i += 2;
       } else {
         result[key] = true;
@@ -47,8 +52,9 @@ export function parseArgsSimple(
 
     if (arg.startsWith("-") && !arg.startsWith("--")) {
       const key = arg.substring(1);
-      if (i + 1 < args.length && !args[i + 1]!.startsWith("-")) {
-        result[key] = args[i + 1]!;
+      const nextArg = args[i + 1];
+      if (nextArg && !nextArg.startsWith("-")) {
+        result[key] = nextArg;
         i += 2;
       } else {
         result[key] = true;

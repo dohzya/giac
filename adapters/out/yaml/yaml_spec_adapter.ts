@@ -7,14 +7,28 @@ import { parse } from "@std/yaml";
 import * as z from "zod/mini";
 import type { SpecReaderPort } from "~/core/application/ports/out/spec_reader_port.ts";
 import type { Axis, AxisId, LevelDefinition, Spec } from "~/core/domain/mod.ts";
+import { getAxisIds } from "~/core/domain/spec.ts";
+import { SpecValidationError } from "~/core/domain/errors.ts";
 import { ExplicitCast } from "~/core/common/explicit_cast.ts";
 
+// Constants derived from domain model (single source of truth)
+const EXPECTED_LEVEL_COUNT = 11; // 0-10 inclusive
+const EXPECTED_AXIS_COUNT = getAxisIds().length;
+
 const LevelDefinitionSchema = z.object({
-  level: z.number().check(
-    z.gte(0),
-    z.lte(10),
-    z.refine((val) => Number.isInteger(val), "Must be an integer"),
-  ),
+  level: z.union([
+    z.literal(0),
+    z.literal(1),
+    z.literal(2),
+    z.literal(3),
+    z.literal(4),
+    z.literal(5),
+    z.literal(6),
+    z.literal(7),
+    z.literal(8),
+    z.literal(9),
+    z.literal(10),
+  ]),
   name_fr: z.string(),
   name_en: z.string(),
   prompt_fragment_fr: z.string(),
@@ -30,8 +44,11 @@ const AxisSchema = z.object({
   prompt_fragment_fr: z.string(),
   prompt_fragment_en: z.string(),
   levels: z.array(LevelDefinitionSchema).check(
-    z.refine((arr) => arr.length === 11, "Must have exactly 11 levels"),
-  ), // Must have exactly 11 levels (0-10)
+    z.refine(
+      (arr) => arr.length === EXPECTED_LEVEL_COUNT,
+      `Must have exactly ${EXPECTED_LEVEL_COUNT} levels`,
+    ),
+  ),
 });
 
 const SpecSchema = z.object({
@@ -40,8 +57,11 @@ const SpecSchema = z.object({
   prompt_fragment_fr: z.string(),
   prompt_fragment_en: z.string(),
   axes: z.array(AxisSchema).check(
-    z.refine((arr) => arr.length === 5, "Must have exactly 5 axes"),
-  ), // Must have exactly 5 axes
+    z.refine(
+      (arr) => arr.length === EXPECTED_AXIS_COUNT,
+      `Must have exactly ${EXPECTED_AXIS_COUNT} axes`,
+    ),
+  ),
 });
 
 type RawSpec = z.infer<typeof SpecSchema>;
@@ -50,9 +70,7 @@ type RawLevelDefinition = z.infer<typeof LevelDefinitionSchema>;
 
 function mapLevelDefinition(raw: RawLevelDefinition): LevelDefinition {
   return {
-    level: ExplicitCast.from<number>(raw.level).cast<
-      0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10
-    >(),
+    level: raw.level, // Already narrowed to Level type by Zod schema
     nameFr: raw.name_fr,
     nameEn: raw.name_en,
     promptFragmentFr: raw.prompt_fragment_fr,
@@ -75,21 +93,21 @@ function mapAxis(raw: RawAxis, id: AxisId): Axis {
 }
 
 function mapSpec(raw: RawSpec): Spec {
-  const axisIds: AxisId[] = [
-    "telisme",
-    "confrontation",
-    "density",
-    "energy",
-    "register",
-  ];
+  const axisIds = getAxisIds();
 
   if (raw.axes.length !== axisIds.length) {
-    throw new Error(`Expected ${axisIds.length} axes, got ${raw.axes.length}`);
+    throw new SpecValidationError(
+      `Expected ${axisIds.length} axes but got ${raw.axes.length}`,
+    );
   }
 
-  const axes: Axis[] = raw.axes.map((rawAxis: RawAxis, index: number) =>
-    mapAxis(rawAxis, axisIds[index]!)
-  );
+  const axes: Axis[] = raw.axes.map((rawAxis: RawAxis, index: number) => {
+    const axisId = axisIds[index];
+    if (!axisId) {
+      throw new SpecValidationError(`Missing axis ID at index ${index}`);
+    }
+    return mapAxis(rawAxis, axisId);
+  });
 
   return {
     descriptionFr: raw.description_fr,

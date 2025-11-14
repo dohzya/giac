@@ -11,6 +11,7 @@ import type { AxisId } from "~/core/domain/axis.ts";
 import type { Language } from "~/core/application/ports/in/build_prompt.ts";
 import { formatAvailableLevels, validateLevelInput } from "./validators.ts";
 import { ExplicitCast } from "~/core/common/explicit_cast.ts";
+import { getMessages } from "../messages.ts";
 import * as ui from "../ui.ts";
 
 /**
@@ -24,14 +25,15 @@ async function promptForAxis(
   const axis = getAxisById(spec, axisId);
   if (!axis) return undefined;
 
+  const msg = getMessages(lang);
   const axisName = lang === "fr" ? axis.nameFr : axis.nameEn;
   const description = lang === "fr" ? axis.descriptionFr : axis.descriptionEn;
 
   ui.title(`\n${axisName}`);
   ui.dim(description);
-  ui.info("\nNiveaux disponibles:");
+  ui.info(msg.promptAvailableLevels);
   ui.info(formatAvailableLevels(axis, lang));
-  ui.prompt(`\nChoisissez un niveau pour ${axisName} (0-10, nom FR ou EN): `);
+  ui.prompt(`${msg.promptChooseLevel} ${axisName} (0-10, FR or EN name): `);
 
   const decoder = new TextDecoder();
   const buffer = new Uint8Array(1024);
@@ -42,9 +44,7 @@ async function promptForAxis(
   const level = validateLevelInput(axis, input);
 
   if (level === undefined) {
-    ui.error(
-      `Valeur invalide: "${input}". Veuillez entrer un nombre (0-10) ou un nom de niveau.`,
-    );
+    ui.error(`${msg.errorInvalidLevelInput}: "${input}"`);
     return undefined;
   }
 

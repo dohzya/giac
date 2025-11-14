@@ -79,7 +79,10 @@ export function create(branch: string, options: CreateOptions = {}): void {
     (e.g., building objects incrementally)
 - Isolate unavoidable casts in tiny helpers with a one-line justification.
 - Validate external inputs early; fail fast with clear errors.
-- **Error handling**: Prefer returning `Result | ErrorType` (where `ErrorType extends Error`) over throwing. If a function throws, make it explicit in the name (e.g., `parseMonthOrThrow`). Use `parseMonth` for safe parsing that returns `Month | ParsingError`.
+- **Error handling**: Prefer returning `Result | ErrorType` (where
+  `ErrorType extends Error`) over throwing. If a function throws, make it
+  explicit in the name (e.g., `parseMonthOrThrow`). Use `parseMonth` for safe
+  parsing that returns `Month | ParsingError`.
 
 ---
 
@@ -107,8 +110,10 @@ export function create(branch: string, options: CreateOptions = {}): void {
 ## 8) Permissions & Security (Deno 2)
 
 - Secure-by-default: no FS/net/env/run access unless granted.
-- Define **permission sets** in `deno.jsonc` and opt in with `-P` (or `-P <name>`). Avoid `-A` in CI/prod.
-- Scope permissions narrowly (paths, hostnames, specific executables). Consider enabling permission **audit logs** in CI.
+- Define **permission sets** in `deno.jsonc` and opt in with `-P` (or
+  `-P <name>`). Avoid `-A` in CI/prod.
+- Scope permissions narrowly (paths, hostnames, specific executables). Consider
+  enabling permission **audit logs** in CI.
 
 Example permission sets in `deno.jsonc`:
 

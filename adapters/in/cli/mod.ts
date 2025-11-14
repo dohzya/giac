@@ -7,6 +7,7 @@ import type { GetSpecUseCase } from "~/core/application/ports/in/get_spec.ts";
 import type { BuildPromptUseCase } from "~/core/application/ports/in/build_prompt.ts";
 import { executeGetSpec } from "./commands/get_spec.ts";
 import { executeBuildPrompt } from "./commands/build_prompt.ts";
+import { getMessages } from "./messages.ts";
 import * as ui from "./ui.ts";
 
 export interface CliAdapter {
@@ -30,10 +31,11 @@ export class CliAdapterImpl implements CliAdapter {
       // Default command is to build prompt
       await executeBuildPrompt(this.getSpec, this.buildPrompt, args.slice(1));
     } else {
-      ui.error(`Commande inconnue: ${command}`);
-      ui.info("Usage: giac [spec|build] [options]");
-      ui.info("  spec - Affiche la spécification");
-      ui.info("  build - Génère un prompt (par défaut)");
+      const msg = getMessages("fr");
+      ui.error(`${msg.errorUnknownCommand}: ${command}`);
+      ui.info(msg.usageHelp);
+      ui.info(`  ${msg.commandHelpSpec}`);
+      ui.info(`  ${msg.commandHelpBuild}`);
       Deno.exit(1);
     }
   }

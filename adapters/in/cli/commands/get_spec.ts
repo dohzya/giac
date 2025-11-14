@@ -6,6 +6,7 @@ import type { GetSpecUseCase } from "~/core/application/ports/in/get_spec.ts";
 import type { Language } from "~/core/application/ports/in/build_prompt.ts";
 import { parseArgs, parseArgsSimple } from "../args.ts";
 import { resolveAxis } from "~/core/domain/spec.ts";
+import { getMessages } from "../messages.ts";
 import * as ui from "../ui.ts";
 
 export async function executeGetSpec(
@@ -28,31 +29,24 @@ export async function executeGetSpec(
     if (axisInput) {
       const axis = resolveAxis(spec, axisInput);
       if (!axis) {
-        const errorMsg = lang === "fr"
-          ? `Axe introuvable: ${axisInput}`
-          : `Axis not found: ${axisInput}`;
-        const helpMsg = lang === "fr"
-          ? "Utilisez un ID, une initiale, ou un nom d'axe (FR ou EN)"
-          : "Use an ID, an initial, or an axis name (FR or EN)";
-        ui.error(errorMsg);
-        ui.info(helpMsg);
+        const msg = getMessages(lang);
+        ui.error(`${msg.errorAxisNotFound}: ${axisInput}`);
+        ui.info(msg.helpAxisIdentifier);
         Deno.exit(1);
       }
 
+      const msg = getMessages(lang);
       const axisName = lang === "fr" ? axis.nameFr : axis.nameEn;
       ui.title(`=== ${axisName} ===`);
 
-      const initialsLabel = lang === "fr" ? "Initiales:" : "Initials:";
-      ui.dim(`${initialsLabel} ${axis.initials.join(", ")}`);
+      ui.dim(`${msg.labelInitials} ${axis.initials.join(", ")}`);
 
-      const descriptionLabel = lang === "fr" ? "Description:" : "Description:";
       const description = lang === "fr"
         ? axis.descriptionFr
         : axis.descriptionEn;
-      ui.dim(`${descriptionLabel} ${description}`);
+      ui.dim(`${msg.labelDescription} ${description}`);
 
-      const levelsLabel = lang === "fr" ? "Niveaux:" : "Levels:";
-      ui.title(`\n${levelsLabel}`);
+      ui.title(`\n${msg.labelLevels}`);
 
       for (const levelDef of axis.levels) {
         const levelName = lang === "fr" ? levelDef.nameFr : levelDef.nameEn;
@@ -63,32 +57,26 @@ export async function executeGetSpec(
         ui.dim(`    ${fragment}`);
       }
     } else {
-      const title = lang === "fr" ? "Spécification GIAC" : "GIAC Specification";
-      ui.title(`=== ${title} ===`);
+      const msg = getMessages(lang);
+      ui.title(`=== ${msg.titleSpecification} ===`);
       ui.info(`\n${lang === "fr" ? spec.descriptionFr : spec.descriptionEn}`);
 
       for (const axis of spec.axes) {
         const axisName = lang === "fr" ? axis.nameFr : axis.nameEn;
         ui.title(`\n${axisName}`);
 
-        const initialsLabel = lang === "fr" ? "Initiales:" : "Initials:";
-        ui.dim(`${initialsLabel} ${axis.initials.join(", ")}`);
+        ui.dim(`${msg.labelInitials} ${axis.initials.join(", ")}`);
 
-        const descriptionLabel = lang === "fr"
-          ? "Description:"
-          : "Description:";
         const description = lang === "fr"
           ? axis.descriptionFr
           : axis.descriptionEn;
-        ui.dim(`${descriptionLabel} ${description}`);
+        ui.dim(`${msg.labelDescription} ${description}`);
       }
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    const errorMsg = lang === "fr"
-      ? `Erreur lors de la récupération de la spec: ${message}`
-      : `Error retrieving spec: ${message}`;
-    ui.error(errorMsg);
+    const msg = getMessages(lang);
+    ui.error(`${msg.errorRetrievingSpec}: ${message}`);
     Deno.exit(1);
   }
 }

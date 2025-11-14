@@ -5,6 +5,7 @@
 import type { Profile } from "~/core/domain/profile.ts";
 import type { Spec } from "~/core/domain/spec.ts";
 import { getAxisById, getAxisIds } from "~/core/domain/spec.ts";
+import { getMessages } from "../messages.ts";
 import * as ui from "../ui.ts";
 
 /**
@@ -15,7 +16,8 @@ export function renderProfilePreview(
   profile: Profile,
   lang: "fr" | "en",
 ): void {
-  ui.title("\n=== Profil sélectionné ===");
+  const msg = getMessages(lang);
+  ui.title(msg.titleSelectedProfile);
 
   const axisIds = getAxisIds();
   const parts: string[] = [];
@@ -29,13 +31,14 @@ export function renderProfilePreview(
     parts.push(`${axisName}=${level}`);
   }
 
-  ui.info(`Profil: ${parts.join(" ")}`);
+  ui.info(`${msg.labelProfile} ${parts.join(" ")}`);
 }
 
 /**
  * Render a preview of the generated prompt.
  */
-export function renderPromptPreview(prompt: string): void {
-  ui.title("\n=== Prompt généré ===");
+export function renderPromptPreview(prompt: string, lang: "fr" | "en"): void {
+  const msg = getMessages(lang);
+  ui.title(msg.titleGeneratedPrompt);
   ui.info(prompt);
 }

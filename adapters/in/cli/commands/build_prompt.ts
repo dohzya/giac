@@ -9,6 +9,7 @@ import { getMissingAxes } from "~/core/domain/profile.ts";
 import { ExplicitCast } from "~/core/common/explicit_cast.ts";
 import { buildProfileInteractively } from "../interactive/profile_flow.ts";
 import { parseArgs } from "../args.ts";
+import { getMessages } from "../messages.ts";
 import * as ui from "../ui.ts";
 
 export async function executeBuildPrompt(
@@ -25,7 +26,8 @@ export async function executeBuildPrompt(
 
     const missing = getMissingAxes(parsed.profile);
     if (missing.length > 0) {
-      ui.info("Certains axes ne sont pas spécifiés. Mode interactif activé.");
+      const msg = getMessages(parsed.lang);
+      ui.info(msg.infoInteractiveModeActivated);
       profile = await buildProfileInteractively(
         spec,
         parsed.profile,
@@ -38,7 +40,8 @@ export async function executeBuildPrompt(
     ui.info(prompt);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    ui.error(`Erreur lors de la génération du prompt: ${message}`);
+    const msg = getMessages("fr");
+    ui.error(`${msg.errorGeneratingPrompt}: ${message}`);
     Deno.exit(1);
   }
 }
