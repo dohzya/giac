@@ -7,7 +7,7 @@ import { executeBuildPrompt } from "./build_prompt.ts";
 import type { BuildPromptUseCase } from "~/core/application/ports/in/build_prompt.ts";
 import type { GetSpecUseCase } from "~/core/application/ports/in/get_spec.ts";
 import type { Spec } from "~/core/domain/spec.ts";
-import type { Profile } from "~/core/domain/profile.ts";
+import type { Profile, PartialProfile } from "~/core/domain/profile.ts";
 import type { Level } from "~/core/domain/axis.ts";
 
 // Test fixtures (inline)
@@ -219,6 +219,74 @@ Deno.test("executeBuildPrompt - handles language parameter", async () => {
     );
 
     assertEquals(exitCalled, false);
+  } finally {
+    Deno.exit = originalExit;
+  }
+});
+
+Deno.test("executeBuildPrompt - prompts for missing axes (interactive mode)", async () => {
+  const getSpec = new MockGetSpecUseCase();
+  const buildPrompt = new MockBuildPromptUseCase();
+
+  // Provide mock interactively function with correct signature and types
+  const mockBuildProfileInteractively = (
+    _spec: Spec,
+    _partial: PartialProfile,
+    _lang: "fr" | "en",
+  ): Promise<Profile> => Promise.resolve({
+    telisme: 1,
+    confrontation: 2,
+    density: 3,
+    energy: 4,
+    register: 5,
+  } as const);
+
+  const originalExit = Deno.exit;
+  let exitCalled = false;
+  Deno.exit = (() => {
+    exitCalled = true;
+  }) as typeof Deno.exit;
+
+  try {
+    await executeBuildPrompt(
+      getSpec,
+      buildPrompt,
+      ["--telisme=1"], // missing other axes
+      mockBuildProfileInteractively,
+    );
+    const profile = buildPrompt.getLastProfile();
+    assertEquals(exitCalled, false);
+    assertEquals(profile, {
+      telisme: 1,
+      confrontation: 2,
+      density: 3,
+      energy: 4,
+      register: 5,
+    });
+  } finally {
+    Deno.exit = originalExit;
+  }
+});
+
+Deno.test("executeBuildPrompt - handles error and exits", async () => {
+  // Mock GetSpecUseCase to throw
+  class FailingGetSpecUseCase implements GetSpecUseCase {
+    execute(): Promise<Spec> {
+      return Promise.reject(new Error("Spec error"));
+    }
+  }
+  const getSpec = new FailingGetSpecUseCase();
+  const buildPrompt = new MockBuildPromptUseCase();
+
+  const originalExit = Deno.exit;
+  let exitCalled = false;
+  Deno.exit = (() => {
+    exitCalled = true;
+  }) as typeof Deno.exit;
+
+  try {
+    await executeBuildPrompt(getSpec, buildPrompt, ["--telisme=1"]);
+    assertEquals(exitCalled, true);
   } finally {
     Deno.exit = originalExit;
   }

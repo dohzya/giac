@@ -156,7 +156,8 @@ Example permission sets in `deno.jsonc`:
 
 ## 11) Testing
 
-- `deno test` with `@std/assert`. Table-driven tests where useful.
+- Run tests with `deno task test` (it includes coverage `--coverage=coverage`).
+- Tests are based on `@std/assert`. Table-driven tests where useful.
 - Keep unit tests fast/deterministic; fake IO; isolate permissions via test
   permission set.
 

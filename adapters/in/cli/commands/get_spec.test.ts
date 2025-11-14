@@ -248,3 +248,26 @@ Deno.test("executeGetSpec - uses --axis flag", async () => {
     Deno.exit = originalExit;
   }
 });
+
+Deno.test("executeGetSpec - handles error from getSpec.execute", async () => {
+  // Mock GetSpecUseCase to throw during execute
+  class FailingGetSpecUseCase implements GetSpecUseCase {
+    execute(): Promise<Spec> {
+      return Promise.reject(new Error("Failed to load spec"));
+    }
+  }
+  const getSpec = new FailingGetSpecUseCase();
+
+  const originalExit = Deno.exit;
+  let exitCalled = false;
+  Deno.exit = (() => {
+    exitCalled = true;
+  }) as typeof Deno.exit;
+
+  try {
+    await executeGetSpec(getSpec, []);
+    assertEquals(exitCalled, true);
+  } finally {
+    Deno.exit = originalExit;
+  }
+});

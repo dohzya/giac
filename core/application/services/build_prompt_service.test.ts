@@ -106,3 +106,80 @@ Deno.test("BuildPromptService - profile line format", () => {
   assertEquals(profileLine!.includes("Télisme=5"), true);
   assertEquals(profileLine!.includes("Confrontation=3"), true);
 });
+
+Deno.test("BuildPromptService - handles missing axis gracefully", () => {
+  const service = new BuildPromptService();
+  // Spec with only telisme axis (missing confrontation, density, energy, register)
+  const incompleteSpec: Spec = {
+    descriptionFr: "Description FR",
+    descriptionEn: "Description EN",
+    promptFragmentFr: "Fragment intro FR",
+    promptFragmentEn: "Fragment intro EN",
+    axes: [
+      {
+        id: "telisme",
+        initials: ["T"],
+        nameFr: "Télisme",
+        nameEn: "Telism",
+        descriptionFr: "Description FR",
+        descriptionEn: "Description EN",
+        promptFragmentFr: "Fragment axe FR",
+        promptFragmentEn: "Fragment axis EN",
+        levels: [
+          {
+            level: 5,
+            nameFr: "Niveau 5",
+            nameEn: "Level 5",
+            promptFragmentFr: "Fragment niveau 5 FR",
+            promptFragmentEn: "Fragment level 5 EN",
+          },
+        ],
+      },
+    ],
+  };
+  const profile = createTestProfile();
+
+  // Should not throw, just skip missing axes
+  const prompt = service.execute(incompleteSpec, profile, "fr");
+  assertExists(prompt);
+  assertEquals(prompt.includes("Fragment intro FR"), true);
+});
+
+Deno.test("BuildPromptService - handles missing level gracefully", () => {
+  const service = new BuildPromptService();
+  // Spec with axis but missing the level used in profile
+  const specWithMissingLevel: Spec = {
+    descriptionFr: "Description FR",
+    descriptionEn: "Description EN",
+    promptFragmentFr: "Fragment intro FR",
+    promptFragmentEn: "Fragment intro EN",
+    axes: [
+      {
+        id: "telisme",
+        initials: ["T"],
+        nameFr: "Télisme",
+        nameEn: "Telism",
+        descriptionFr: "Description FR",
+        descriptionEn: "Description EN",
+        promptFragmentFr: "Fragment axe FR",
+        promptFragmentEn: "Fragment axis EN",
+        levels: [
+          {
+            level: 3,
+            nameFr: "Niveau 3",
+            nameEn: "Level 3",
+            promptFragmentFr: "Fragment niveau 3 FR",
+            promptFragmentEn: "Fragment level 3 EN",
+          },
+        ],
+      },
+    ],
+  };
+  const profile = createTestProfile(); // Uses level 5 for telisme, but spec only has level 3
+
+  // Should not throw, just skip missing level
+  const prompt = service.execute(specWithMissingLevel, profile, "fr");
+  assertExists(prompt);
+  assertEquals(prompt.includes("Fragment intro FR"), true);
+  assertEquals(prompt.includes("Fragment niveau 3 FR"), false); // Level 5 not found, so fragment skipped
+});
