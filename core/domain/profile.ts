@@ -2,23 +2,10 @@
  * Domain model for a profile: mapping of axes to their selected levels.
  */
 
-import type { AxisId, Level } from "./axis.ts";
+import type { AxisId } from "./axis.ts";
 
-export interface Profile {
-  readonly telisme: Level;
-  readonly confrontation: Level;
-  readonly density: Level;
-  readonly energy: Level;
-  readonly register: Level;
-}
-
-export interface PartialProfile {
-  readonly telisme?: Level;
-  readonly confrontation?: Level;
-  readonly density?: Level;
-  readonly energy?: Level;
-  readonly register?: Level;
-}
+export type Profile = Record<AxisId, number>;
+export type PartialProfile = Record<AxisId, number | undefined>;
 
 /**
  * Create a complete profile from a partial profile, filling missing values with defaults.
@@ -38,21 +25,20 @@ export interface PartialProfile {
  */
 export function createProfile(
   partial: PartialProfile,
-  defaults: Profile = {
-    telisme: 5,
-    confrontation: 5,
-    density: 5,
-    energy: 5,
-    register: 5,
-  },
+  defaults: Profile = {},
 ): Profile {
-  return {
-    telisme: partial.telisme ?? defaults.telisme,
-    confrontation: partial.confrontation ?? defaults.confrontation,
-    density: partial.density ?? defaults.density,
-    energy: partial.energy ?? defaults.energy,
-    register: partial.register ?? defaults.register,
-  };
+  const result: Profile = {};
+  for (const [axisId, value] of Object.entries(partial)) {
+    if (value !== undefined) {
+      result[axisId as AxisId] = value;
+    }
+  }
+  for (const [axisId, value] of Object.entries(defaults)) {
+    if (result[axisId as AxisId] === undefined) {
+      result[axisId as AxisId] = value;
+    }
+  }
+  return result;
 }
 
 /**
@@ -73,14 +59,11 @@ export function createProfile(
  * }
  * ```
  */
-export function isComplete(profile: PartialProfile): profile is Profile {
-  return (
-    profile.telisme !== undefined &&
-    profile.confrontation !== undefined &&
-    profile.density !== undefined &&
-    profile.energy !== undefined &&
-    profile.register !== undefined
-  );
+export function isComplete(
+  profile: PartialProfile,
+  axisIds: readonly AxisId[],
+): profile is Profile {
+  return axisIds.every((id) => profile[id] !== undefined);
 }
 
 /**
@@ -99,12 +82,9 @@ export function isComplete(profile: PartialProfile): profile is Profile {
  * // Returns: ["density", "energy", "register"]
  * ```
  */
-export function getMissingAxes(profile: PartialProfile): AxisId[] {
-  const missing: AxisId[] = [];
-  if (profile.telisme === undefined) missing.push("telisme");
-  if (profile.confrontation === undefined) missing.push("confrontation");
-  if (profile.density === undefined) missing.push("density");
-  if (profile.energy === undefined) missing.push("energy");
-  if (profile.register === undefined) missing.push("register");
-  return missing;
+export function getMissingAxes(
+  profile: PartialProfile,
+  axisIds: readonly AxisId[],
+): AxisId[] {
+  return axisIds.filter((id) => profile[id] === undefined);
 }

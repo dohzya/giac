@@ -1,18 +1,19 @@
 /**
- * Domain model for an axis (Télisme, Confrontation, Densité, Énergie, Registre).
+ * Domain model for an axis.
+ * Axis identifiers are spec-driven: any non-empty string key in the YAML mapping.
+ * Branded string prevents mixing with other string identifiers.
  */
 
-export type AxisId =
-  | "telisme"
-  | "confrontation"
-  | "density"
-  | "energy"
-  | "register";
+export type AxisId = string & { readonly __axisId: unique symbol };
 
-export type Level = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+export function axisId(value: string): AxisId {
+  return value as AxisId; // Branded cast (spec-driven; validated at load time)
+}
+
+// Levels are numeric and spec-driven (no fixed upper bound).
 
 export interface LevelDefinition {
-  readonly level: Level;
+  readonly level: number;
   readonly nameFr: string;
   readonly nameEn: string;
   readonly promptFragmentFr: string;
@@ -21,6 +22,7 @@ export interface LevelDefinition {
 
 export interface Axis {
   readonly id: AxisId;
+  readonly priority: number; // Explicit priority (gaps allowed, duplicates forbidden)
   readonly initials: readonly string[];
   readonly nameFr: string;
   readonly nameEn: string;
@@ -36,7 +38,7 @@ export interface Axis {
  */
 export function getLevel(
   axis: Axis,
-  level: Level,
+  level: number,
 ): LevelDefinition | undefined {
   return axis.levels.find((l) => l.level === level);
 }
@@ -44,6 +46,6 @@ export function getLevel(
 /**
  * Check if a value is a valid level (0-10).
  */
-export function isValidLevel(value: number): value is Level {
-  return Number.isInteger(value) && value >= 0 && value <= 10;
+export function isValidLevel(axis: Axis, value: number): boolean {
+  return axis.levels.some((l) => l.level === value);
 }

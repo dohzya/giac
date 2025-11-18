@@ -6,6 +6,7 @@ import type { BuildPromptUseCase } from "~/core/application/ports/in/build_promp
 import type { GetSpecUseCase } from "~/core/application/ports/in/get_spec.ts";
 import type { PartialProfile, Profile } from "~/core/domain/profile.ts";
 import { getMissingAxes } from "~/core/domain/profile.ts";
+import { getAxesInPriority } from "~/core/domain/spec.ts";
 import { ExplicitCast } from "~/core/common/explicit_cast.ts";
 import { buildProfileInteractively as defaultBuildProfileInteractively } from "../interactive/profile_flow.ts";
 import { parseArgs } from "../args.ts";
@@ -26,7 +27,10 @@ export async function executeBuildPrompt(
     let profile: Profile = ExplicitCast.from<PartialProfile>(parsed.profile)
       .cast<Profile>();
 
-    const missing = getMissingAxes(parsed.profile);
+    const missing = getMissingAxes(
+      parsed.profile,
+      getAxesInPriority(spec).map((a) => a.id),
+    );
     if (missing.length > 0) {
       const msg = getMessages(parsed.lang);
       ui.info(msg.infoInteractiveModeActivated);

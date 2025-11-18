@@ -10,62 +10,62 @@ import { resolveLevel } from "~/core/domain/spec.ts";
 import { ExplicitCast } from "~/core/common/explicit_cast.ts";
 
 /**
+ * Parse a long flag (--key or --key=value) and return [key, value, consumedCount]
+ */
+function parseLongFlag(
+  arg: string,
+  nextArg: string | undefined,
+): [string, string | boolean, number] | undefined {
+  const match = /^--([^=]+)(?:=(.*))?$/.exec(arg);
+  if (!match) return undefined;
+  const key = match[1];
+  const directValue = match[2];
+  if (!key) return undefined;
+  if (directValue !== undefined) return [key, directValue, 1];
+  if (nextArg && !nextArg.startsWith("-")) return [key, nextArg, 2];
+  return [key, true, 1];
+}
+
+/**
+ * Parse a short flag (-k or -k=value) and return [key, value, consumedCount]
+ */
+function parseShortFlag(
+  arg: string,
+  nextArg: string | undefined,
+): [string, string | boolean, number] | undefined {
+  const match = /^-([^=])(?:=(.*))?$/.exec(arg);
+  if (!match) return undefined;
+  const key = match[1];
+  const directValue = match[2];
+  if (!key) return undefined;
+  if (directValue !== undefined) return [key, directValue, 1];
+  if (nextArg && !nextArg.startsWith("-")) return [key, nextArg, 2];
+  return [key, true, 1];
+}
+
+/**
  * Simple argument parser for CLI flags.
  */
 export function parseArgsSimple(
   args: string[],
 ): Record<string, string | boolean> {
   const result: Record<string, string | boolean> = {};
-  let i = 0;
-
-  while (i < args.length) {
+  for (let i = 0; i < args.length;) {
     const arg = args[i];
-    if (arg === undefined) {
+    if (!arg?.startsWith("-")) {
       i++;
       continue;
     }
-
-    if (arg.startsWith("-") && arg.includes("=")) {
-      const dashCount = arg.startsWith("--") ? 2 : 1;
-      const parts = arg.substring(dashCount).split("=", 2);
-      const key = parts[0];
-      const value = parts[1];
-      if (key) {
-        result[key] = value ?? true;
-      }
+    const parsed = parseLongFlag(arg, args[i + 1]) ??
+      parseShortFlag(arg, args[i + 1]);
+    if (parsed) {
+      const [key, value, consumed] = parsed;
+      result[key] = value;
+      i += consumed;
+    } else {
       i++;
-      continue;
     }
-
-    if (arg.startsWith("--")) {
-      const key = arg.substring(2);
-      const nextArg = args[i + 1];
-      if (nextArg && !nextArg.startsWith("-")) {
-        result[key] = nextArg;
-        i += 2;
-      } else {
-        result[key] = true;
-        i++;
-      }
-      continue;
-    }
-
-    if (arg.startsWith("-") && !arg.startsWith("--")) {
-      const key = arg.substring(1);
-      const nextArg = args[i + 1];
-      if (nextArg && !nextArg.startsWith("-")) {
-        result[key] = nextArg;
-        i += 2;
-      } else {
-        result[key] = true;
-        i++;
-      }
-      continue;
-    }
-
-    i++;
   }
-
   return result;
 }
 
@@ -77,139 +77,93 @@ export interface ParsedArgs {
 /**
  * Parse environment variables for axis values.
  */
-function parseEnvVars(): Partial<Record<string, string>> {
-  const env: Partial<Record<string, string>> = {};
-
-  const envVars = [
-    "TELISME_VALUE",
-    "CHALLENGE_VALUE",
-    "CONFRONTATION_VALUE",
-    "DENSITY_VALUE",
-    "ENERGY_VALUE",
-    "REGISTER_VALUE",
-  ];
-
-  for (const envVar of envVars) {
-    const value = Deno.env.get(envVar);
-    if (value !== undefined) {
-      env[envVar] = value;
-    }
-  }
-
-  return env;
+// Convert axis id to primary env var name (e.g. telisme -> TELISME_VALUE)
+function toEnvVar(id: string): string {
+  return id.replaceAll(/[^a-zA-Z0-9]/g, "_").toUpperCase() + "_VALUE";
 }
 
 /**
  * Parse CLI arguments and environment variables into a partial profile.
  */
+// Language resolution isolated to reduce complexity
+function resolveLang(flags: Record<string, string | boolean>): Language {
+  let lang: Language = "fr";
+  const envLang = Deno.env.get("GIAC_LANG");
+  if (envLang === "en" || envLang === "fr") lang = envLang;
+  if (flags.fr === true || flags.fr === "true") lang = "fr";
+  if (flags.en === true || flags.en === "true") lang = "en";
+  return lang;
+}
+
+function applyEnv(
+  axis: Spec["axes"][keyof Spec["axes"]],
+  profile: PartialProfile,
+): boolean {
+  const id = axis.id as string;
+  const envVal = Deno.env.get(toEnvVar(id));
+  if (envVal === undefined) return false;
+  const level = resolveLevel(axis, envVal);
+  if (level === undefined) return false;
+  ExplicitCast.from<PartialProfile>(profile).cast<
+    Record<string, number>
+  >()[id] = level;
+  return true;
+}
+
+function buildPossibleKeys(
+  id: string,
+  initials: readonly string[],
+  aliasToAxis: Record<string, string>,
+): string[] {
+  const keys = [id];
+  for (const initial of initials) keys.push(initial.toLowerCase());
+  for (const [alias, target] of Object.entries(aliasToAxis)) {
+    if (target === id) keys.push(alias);
+  }
+  return keys;
+}
+
+function applyFlags(
+  axis: Spec["axes"][keyof Spec["axes"]],
+  flags: Record<string, string | boolean>,
+  profile: PartialProfile,
+  aliasToAxis: Record<string, string>,
+): void {
+  const id = axis.id as string;
+  const possibleKeys = buildPossibleKeys(id, axis.initials, aliasToAxis);
+  for (const key of possibleKeys) {
+    const raw = flags[key];
+    if (raw === undefined) continue;
+    const level = resolveLevel(axis, String(raw));
+    if (level !== undefined) {
+      ExplicitCast.from<PartialProfile>(profile).cast<
+        Record<string, number>
+      >()[id] = level;
+      break;
+    }
+  }
+}
+
 export function parseArgs(spec: Spec, args: string[]): ParsedArgs {
   const flags = parseArgsSimple(args);
 
-  if (flags.initiative !== undefined && flags.telisme === undefined) {
-    flags.telisme = flags.initiative;
-  }
-  if (flags.t !== undefined && flags.telisme === undefined) {
-    flags.telisme = flags.t;
-  }
-  if (flags.challenge !== undefined && flags.confrontation === undefined) {
-    flags.confrontation = flags.challenge;
-  }
-  if (flags.c !== undefined && flags.confrontation === undefined) {
-    flags.confrontation = flags.c;
-  }
-  if (flags.densité !== undefined && flags.density === undefined) {
-    flags.density = flags.densité;
-  }
-  if (flags.d !== undefined && flags.density === undefined) {
-    flags.density = flags.d;
-  }
-  if (flags.énergie !== undefined && flags.energy === undefined) {
-    flags.energy = flags.énergie;
-  }
-  if (flags.e !== undefined && flags.energy === undefined) {
-    flags.energy = flags.e;
-  }
-  if (flags.registre !== undefined && flags.register === undefined) {
-    flags.register = flags.registre;
-  }
-  if (flags.r !== undefined && flags.register === undefined) {
-    flags.register = flags.r;
-  }
+  // Alias map (spec-driven axes can receive these extra French synonyms or legacy names)
+  const aliasToAxis: Record<string, string> = {
+    initiative: "telisme",
+    challenge: "confrontation",
+    densité: "density",
+    "énergie": "energy",
+    registre: "register",
+  };
 
   const profile: PartialProfile = {};
-  const envVars = parseEnvVars();
 
-  let lang: Language = "fr";
-  const envLang = Deno.env.get("GIAC_LANG");
-  if (envLang === "en" || envLang === "fr") {
-    lang = envLang;
-  }
-  if (flags.fr === true || flags.fr === "true") lang = "fr";
-  if (flags.en === true || flags.en === "true") lang = "en";
+  const lang = resolveLang(flags);
 
-  const axisMappings = [
-    {
-      envVar: "TELISME_VALUE",
-      cliKeys: ["telisme", "initiative", "t"],
-      axisId: "telisme",
-    },
-    {
-      envVar: "CHALLENGE_VALUE",
-      cliKeys: ["confrontation", "challenge", "c"],
-      axisId: "confrontation",
-    },
-    {
-      envVar: "CONFRONTATION_VALUE",
-      cliKeys: ["confrontation", "challenge", "c"],
-      axisId: "confrontation",
-    },
-    {
-      envVar: "DENSITY_VALUE",
-      cliKeys: ["density", "densité", "d"],
-      axisId: "density",
-    },
-    {
-      envVar: "ENERGY_VALUE",
-      cliKeys: ["energy", "énergie", "e"],
-      axisId: "energy",
-    },
-    {
-      envVar: "REGISTER_VALUE",
-      cliKeys: ["register", "registre", "r"],
-      axisId: "register",
-    },
-  ];
-
-  for (const mapping of axisMappings) {
-    const envValue = envVars[mapping.envVar];
-    if (envValue !== undefined) {
-      const axis = spec.axes.find((a) => a.id === mapping.axisId);
-      if (axis) {
-        const level = resolveLevel(axis, envValue);
-        if (level !== undefined) {
-          ExplicitCast.from<PartialProfile>(profile).cast<
-            Record<string, number>
-          >()[mapping.axisId] = level;
-          continue;
-        }
-      }
-    }
-
-    for (const key of mapping.cliKeys) {
-      const value = flags[key];
-      if (value !== undefined) {
-        const axis = spec.axes.find((a) => a.id === mapping.axisId);
-        if (axis) {
-          // Try to resolve as level (handles both string and number)
-          const level = resolveLevel(axis, String(value));
-          if (level !== undefined) {
-            ExplicitCast.from<PartialProfile>(profile).cast<
-              Record<string, number>
-            >()[mapping.axisId] = level;
-            break;
-          }
-        }
-      }
+  // Iterate axes dynamically (spec-driven)
+  for (const axis of Object.values(spec.axes)) {
+    if (!applyEnv(axis, profile)) {
+      applyFlags(axis, flags, profile, aliasToAxis);
     }
   }
 

@@ -6,7 +6,7 @@ import { assertEquals } from "@std/assert";
 import { executeGetSpec } from "./get_spec.ts";
 import type { GetSpecUseCase } from "~/core/application/ports/in/get_spec.ts";
 import type { Spec } from "~/core/domain/spec.ts";
-import type { Level } from "~/core/domain/axis.ts";
+import { axisId } from "~/core/domain/axis.ts";
 
 // Test fixture (inline)
 const createTestSpec = (): Spec => ({
@@ -14,9 +14,10 @@ const createTestSpec = (): Spec => ({
   descriptionEn: "Test spec in English",
   promptFragmentFr: "Fragment FR global",
   promptFragmentEn: "Global EN fragment",
-  axes: [
-    {
-      id: "telisme",
+  axes: {
+    [axisId("telisme")]: {
+      id: axisId("telisme"),
+      priority: 1,
       initials: ["T", "I"],
       nameFr: "Télisme",
       nameEn: "Initiative",
@@ -25,15 +26,16 @@ const createTestSpec = (): Spec => ({
       promptFragmentFr: "Fragment télisme",
       promptFragmentEn: "Initiative fragment",
       levels: Array.from({ length: 11 }, (_, i) => ({
-        level: i as Level,
+        level: i,
         nameFr: `Niveau ${i}`,
         nameEn: `Level ${i}`,
         promptFragmentFr: `T-Fragment ${i}`,
         promptFragmentEn: `T-Fragment ${i}`,
       })),
     },
-    {
-      id: "confrontation",
+    [axisId("confrontation")]: {
+      id: axisId("confrontation"),
+      priority: 2,
       initials: ["C"],
       nameFr: "Confrontation",
       nameEn: "Challenge",
@@ -42,15 +44,16 @@ const createTestSpec = (): Spec => ({
       promptFragmentFr: "Fragment confrontation",
       promptFragmentEn: "Challenge fragment",
       levels: Array.from({ length: 11 }, (_, i) => ({
-        level: i as Level,
+        level: i,
         nameFr: `Niveau ${i}`,
         nameEn: `Level ${i}`,
         promptFragmentFr: `C-Fragment ${i}`,
         promptFragmentEn: `C-Fragment ${i}`,
       })),
     },
-    {
-      id: "density",
+    [axisId("density")]: {
+      id: axisId("density"),
+      priority: 3,
       initials: ["D"],
       nameFr: "Densité",
       nameEn: "Density",
@@ -59,15 +62,16 @@ const createTestSpec = (): Spec => ({
       promptFragmentFr: "Fragment densité",
       promptFragmentEn: "Density fragment",
       levels: Array.from({ length: 11 }, (_, i) => ({
-        level: i as Level,
+        level: i,
         nameFr: `Niveau ${i}`,
         nameEn: `Level ${i}`,
         promptFragmentFr: `D-Fragment ${i}`,
         promptFragmentEn: `D-Fragment ${i}`,
       })),
     },
-    {
-      id: "energy",
+    [axisId("energy")]: {
+      id: axisId("energy"),
+      priority: 4,
       initials: ["E"],
       nameFr: "Énergie",
       nameEn: "Energy",
@@ -76,15 +80,16 @@ const createTestSpec = (): Spec => ({
       promptFragmentFr: "Fragment énergie",
       promptFragmentEn: "Energy fragment",
       levels: Array.from({ length: 11 }, (_, i) => ({
-        level: i as Level,
+        level: i,
         nameFr: `Niveau ${i}`,
         nameEn: `Level ${i}`,
         promptFragmentFr: `E-Fragment ${i}`,
         promptFragmentEn: `E-Fragment ${i}`,
       })),
     },
-    {
-      id: "register",
+    [axisId("register")]: {
+      id: axisId("register"),
+      priority: 5,
       initials: ["R"],
       nameFr: "Registre",
       nameEn: "Register",
@@ -93,14 +98,14 @@ const createTestSpec = (): Spec => ({
       promptFragmentFr: "Fragment registre",
       promptFragmentEn: "Register fragment",
       levels: Array.from({ length: 11 }, (_, i) => ({
-        level: i as Level,
+        level: i,
         nameFr: `Niveau ${i}`,
         nameEn: `Level ${i}`,
         promptFragmentFr: `R-Fragment ${i}`,
         promptFragmentEn: `R-Fragment ${i}`,
       })),
     },
-  ],
+  },
 });
 
 // Mock implementation

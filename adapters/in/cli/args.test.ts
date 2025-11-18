@@ -5,6 +5,7 @@
 import { assertEquals } from "@std/assert";
 import { parseArgs, parseArgsSimple } from "./args.ts";
 import type { Spec } from "~/core/domain/spec.ts";
+import { axisId } from "~/core/domain/axis.ts";
 
 function createTestSpec(): Spec {
   return {
@@ -12,9 +13,10 @@ function createTestSpec(): Spec {
     descriptionEn: "Description EN",
     promptFragmentFr: "Fragment FR",
     promptFragmentEn: "Fragment EN",
-    axes: [
-      {
-        id: "telisme",
+    axes: {
+      [axisId("telisme")]: {
+        id: axisId("telisme"),
+        priority: 1,
         initials: ["T"],
         nameFr: "Télisme",
         nameEn: "Telism",
@@ -46,8 +48,9 @@ function createTestSpec(): Spec {
           },
         ],
       },
-      {
-        id: "confrontation",
+      [axisId("confrontation")]: {
+        id: axisId("confrontation"),
+        priority: 2,
         initials: ["C"],
         nameFr: "Confrontation",
         nameEn: "Confrontation",
@@ -72,8 +75,9 @@ function createTestSpec(): Spec {
           },
         ],
       },
-      {
-        id: "density",
+      [axisId("density")]: {
+        id: axisId("density"),
+        priority: 3,
         initials: ["D"],
         nameFr: "Densité",
         nameEn: "Density",
@@ -91,8 +95,9 @@ function createTestSpec(): Spec {
           },
         ],
       },
-      {
-        id: "energy",
+      [axisId("energy")]: {
+        id: axisId("energy"),
+        priority: 4,
         initials: ["E"],
         nameFr: "Énergie",
         nameEn: "Energy",
@@ -110,8 +115,9 @@ function createTestSpec(): Spec {
           },
         ],
       },
-      {
-        id: "register",
+      [axisId("register")]: {
+        id: axisId("register"),
+        priority: 5,
         initials: ["R"],
         nameFr: "Registre",
         nameEn: "Register",
@@ -129,7 +135,7 @@ function createTestSpec(): Spec {
           },
         ],
       },
-    ],
+    },
   };
 }
 
@@ -226,56 +232,56 @@ Deno.test("parseArgs - CLI flag overrides env var", () => {
 Deno.test("parseArgs - parse axis value from CLI (long form)", () => {
   const spec = createTestSpec();
   const result = parseArgs(spec, ["--telisme", "5"]);
-  assertEquals(result.profile.telisme, 5);
+  assertEquals(result.profile[axisId("telisme")], 5);
 });
 
 Deno.test("parseArgs - parse axis value from CLI (short form)", () => {
   const spec = createTestSpec();
   const result = parseArgs(spec, ["-t", "5"]);
-  assertEquals(result.profile.telisme, 5);
+  assertEquals(result.profile[axisId("telisme")], 5);
 });
 
 Deno.test("parseArgs - parse axis value from CLI (equals syntax)", () => {
   const spec = createTestSpec();
   const result = parseArgs(spec, ["--telisme=5"]);
-  assertEquals(result.profile.telisme, 5);
+  assertEquals(result.profile[axisId("telisme")], 5);
 });
 
 Deno.test("parseArgs - alias initiative maps to telisme", () => {
   const spec = createTestSpec();
   const result = parseArgs(spec, ["--initiative", "5"]);
-  assertEquals(result.profile.telisme, 5);
+  assertEquals(result.profile[axisId("telisme")], 5);
 });
 
 Deno.test("parseArgs - alias challenge maps to confrontation", () => {
   const spec = createTestSpec();
   const result = parseArgs(spec, ["--challenge", "3"]);
-  assertEquals(result.profile.confrontation, 3);
+  assertEquals(result.profile[axisId("confrontation")], 3);
 });
 
 Deno.test("parseArgs - alias densité maps to density", () => {
   const spec = createTestSpec();
   const result = parseArgs(spec, ["--densité", "0"]);
-  assertEquals(result.profile.density, 0);
+  assertEquals(result.profile[axisId("density")], 0);
 });
 
 Deno.test("parseArgs - alias énergie maps to energy", () => {
   const spec = createTestSpec();
   const result = parseArgs(spec, ["--énergie", "8"]);
-  assertEquals(result.profile.energy, 8);
+  assertEquals(result.profile[axisId("energy")], 8);
 });
 
 Deno.test("parseArgs - alias registre maps to register", () => {
   const spec = createTestSpec();
   const result = parseArgs(spec, ["--registre", "2"]);
-  assertEquals(result.profile.register, 2);
+  assertEquals(result.profile[axisId("register")], 2);
 });
 
 Deno.test("parseArgs - parse axis value from env var", () => {
   const spec = createTestSpec();
   Deno.env.set("TELISME_VALUE", "5");
   const result = parseArgs(spec, []);
-  assertEquals(result.profile.telisme, 5);
+  assertEquals(result.profile[axisId("telisme")], 5);
   Deno.env.delete("TELISME_VALUE");
 });
 
@@ -284,38 +290,38 @@ Deno.test("parseArgs - env var has priority over CLI", () => {
   Deno.env.set("TELISME_VALUE", "0");
   const result = parseArgs(spec, ["--telisme", "5"]);
   // Env var is processed first, so it takes priority
-  assertEquals(result.profile.telisme, 0);
+  assertEquals(result.profile[axisId("telisme")], 0);
   Deno.env.delete("TELISME_VALUE");
 });
 
 Deno.test("parseArgs - parse multiple axes", () => {
   const spec = createTestSpec();
   const result = parseArgs(spec, ["--telisme", "5", "--confrontation", "3"]);
-  assertEquals(result.profile.telisme, 5);
+  assertEquals(result.profile[axisId("telisme")], 5);
   // confrontation level 3 exists in test spec
-  assertEquals(result.profile.confrontation, 3);
+  assertEquals(result.profile[axisId("confrontation")], 3);
 });
 
 Deno.test("parseArgs - invalid level value is ignored", () => {
   const spec = createTestSpec();
   const result = parseArgs(spec, ["--telisme", "99"]);
-  assertEquals("telisme" in result.profile, false);
+  assertEquals(axisId("telisme") in result.profile, false);
 });
 
 Deno.test("parseArgs - level name (French) is resolved", () => {
   const spec = createTestSpec();
   const result = parseArgs(spec, ["--telisme", "Niveau 5"]);
-  assertEquals(result.profile.telisme, 5);
+  assertEquals(result.profile[axisId("telisme")], 5);
 });
 
 Deno.test("parseArgs - level name (English) is resolved", () => {
   const spec = createTestSpec();
   const result = parseArgs(spec, ["--telisme", "Level 10"]);
-  assertEquals(result.profile.telisme, 10);
+  assertEquals(result.profile[axisId("telisme")], 10);
 });
 
 Deno.test("parseArgs - level name case insensitive", () => {
   const spec = createTestSpec();
   const result = parseArgs(spec, ["--telisme", "niveau 5"]);
-  assertEquals(result.profile.telisme, 5);
+  assertEquals(result.profile[axisId("telisme")], 5);
 });

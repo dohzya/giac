@@ -4,7 +4,7 @@
 
 import type { Profile } from "~/core/domain/profile.ts";
 import type { Spec } from "~/core/domain/spec.ts";
-import { getAxisById, getAxisIds } from "~/core/domain/spec.ts";
+import { getAxesInPriority } from "~/core/domain/spec.ts";
 import { getMessages } from "../messages.ts";
 import * as ui from "../ui.ts";
 
@@ -19,15 +19,11 @@ export function renderProfilePreview(
   const msg = getMessages(lang);
   ui.title(msg.titleSelectedProfile);
 
-  const axisIds = getAxisIds();
+  const axes = getAxesInPriority(spec);
   const parts: string[] = [];
-
-  for (const axisId of axisIds) {
-    const axis = getAxisById(spec, axisId);
-    if (!axis) continue;
-
+  for (const axis of axes) {
     const axisName = lang === "fr" ? axis.nameFr : axis.nameEn;
-    const level = profile[axisId];
+    const level = profile[axis.id];
     parts.push(`${axisName}=${level}`);
   }
 

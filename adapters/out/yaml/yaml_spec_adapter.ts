@@ -7,28 +7,14 @@ import { parse } from "@std/yaml";
 import * as z from "zod/mini";
 import type { SpecReaderPort } from "~/core/application/ports/out/spec_reader_port.ts";
 import type { Axis, AxisId, LevelDefinition, Spec } from "~/core/domain/mod.ts";
-import { getAxisIds } from "~/core/domain/spec.ts";
+import { axisId } from "~/core/domain/axis.ts";
 import { SpecValidationError } from "~/core/domain/errors.ts";
 import { ExplicitCast } from "~/core/common/explicit_cast.ts";
 
-// Constants derived from domain model (single source of truth)
-const EXPECTED_LEVEL_COUNT = 11; // 0-10 inclusive
-const EXPECTED_AXIS_COUNT = getAxisIds().length;
+// No fixed counts: spec drives axes and levels. Only enforce unique priorities.
 
 const LevelDefinitionSchema = z.object({
-  level: z.union([
-    z.literal(0),
-    z.literal(1),
-    z.literal(2),
-    z.literal(3),
-    z.literal(4),
-    z.literal(5),
-    z.literal(6),
-    z.literal(7),
-    z.literal(8),
-    z.literal(9),
-    z.literal(10),
-  ]),
+  level: z.int().check(z.nonnegative()),
   name_fr: z.string(),
   name_en: z.string(),
   prompt_fragment_fr: z.string(),
@@ -36,6 +22,7 @@ const LevelDefinitionSchema = z.object({
 });
 
 const AxisSchema = z.object({
+  priority: z.int().check(z.nonnegative()),
   initials: z.array(z.string()),
   name_fr: z.string(),
   name_en: z.string(),
@@ -43,12 +30,7 @@ const AxisSchema = z.object({
   description_en: z.string(),
   prompt_fragment_fr: z.string(),
   prompt_fragment_en: z.string(),
-  levels: z.array(LevelDefinitionSchema).check(
-    z.refine(
-      (arr) => arr.length === EXPECTED_LEVEL_COUNT,
-      `Must have exactly ${EXPECTED_LEVEL_COUNT} levels`,
-    ),
-  ),
+  levels: z.array(LevelDefinitionSchema),
 });
 
 const SpecSchema = z.object({
@@ -56,12 +38,7 @@ const SpecSchema = z.object({
   description_en: z.string(),
   prompt_fragment_fr: z.string(),
   prompt_fragment_en: z.string(),
-  axes: z.array(AxisSchema).check(
-    z.refine(
-      (arr) => arr.length === EXPECTED_AXIS_COUNT,
-      `Must have exactly ${EXPECTED_AXIS_COUNT} axes`,
-    ),
-  ),
+  axes: z.record(z.string(), AxisSchema),
 });
 
 type RawSpec = z.infer<typeof SpecSchema>;
@@ -78,9 +55,10 @@ function mapLevelDefinition(raw: RawLevelDefinition): LevelDefinition {
   };
 }
 
-function mapAxis(raw: RawAxis, id: AxisId): Axis {
+function mapAxis(id: string, raw: RawAxis): Axis {
   return {
-    id,
+    id: axisId(id),
+    priority: raw.priority,
     initials: raw.initials,
     nameFr: raw.name_fr,
     nameEn: raw.name_en,
@@ -93,22 +71,18 @@ function mapAxis(raw: RawAxis, id: AxisId): Axis {
 }
 
 function mapSpec(raw: RawSpec): Spec {
-  const axisIds = getAxisIds();
-
-  if (raw.axes.length !== axisIds.length) {
-    throw new SpecValidationError(
-      `Expected ${axisIds.length} axes but got ${raw.axes.length}`,
-    );
-  }
-
-  const axes: Axis[] = raw.axes.map((rawAxis: RawAxis, index: number) => {
-    const axisId = axisIds[index];
-    if (!axisId) {
-      throw new SpecValidationError(`Missing axis ID at index ${index}`);
+  const axes: Record<AxisId, Axis> = {};
+  const priorities = new Set<number>();
+  for (const [key, rawAxis] of Object.entries(raw.axes)) {
+    if (priorities.has(rawAxis.priority)) {
+      throw new SpecValidationError(
+        `Duplicate axis priority: ${rawAxis.priority}`,
+      );
     }
-    return mapAxis(rawAxis, axisId);
-  });
-
+    priorities.add(rawAxis.priority);
+    const axis = mapAxis(key, rawAxis);
+    axes[axis.id] = axis;
+  }
   return {
     descriptionFr: raw.description_fr,
     descriptionEn: raw.description_en,

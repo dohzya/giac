@@ -8,11 +8,12 @@ import {
   formatLevel,
   validateLevelInput,
 } from "./validators.ts";
-import type { Axis } from "~/core/domain/axis.ts";
+import { type Axis, axisId } from "~/core/domain/axis.ts";
 
 function createTestAxis(): Axis {
   return {
-    id: "telisme",
+    id: axisId("telisme"),
+    priority: 1,
     initials: ["T"],
     nameFr: "Télisme",
     nameEn: "Telism",

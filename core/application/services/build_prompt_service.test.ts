@@ -6,16 +6,20 @@ import { assertEquals, assertExists } from "@std/assert";
 import { BuildPromptService } from "./build_prompt_service.ts";
 import type { Spec } from "~/core/domain/spec.ts";
 import type { Profile } from "~/core/domain/profile.ts";
+import { axisId } from "~/core/domain/axis.ts";
 
 function createTestSpec(): Spec {
+  const telismeId = axisId("telisme");
+  const confrontationId = axisId("confrontation");
   return {
     descriptionFr: "Description FR",
     descriptionEn: "Description EN",
     promptFragmentFr: "Fragment intro FR",
     promptFragmentEn: "Fragment intro EN",
-    axes: [
-      {
-        id: "telisme",
+    axes: {
+      [telismeId]: {
+        id: telismeId,
+        priority: 1,
         initials: ["T"],
         nameFr: "Télisme",
         nameEn: "Telism",
@@ -33,8 +37,9 @@ function createTestSpec(): Spec {
           },
         ],
       },
-      {
-        id: "confrontation",
+      [confrontationId]: {
+        id: confrontationId,
+        priority: 2,
         initials: ["C"],
         nameFr: "Confrontation",
         nameEn: "Confrontation",
@@ -52,17 +57,17 @@ function createTestSpec(): Spec {
           },
         ],
       },
-    ],
+    },
   };
 }
 
 function createTestProfile(): Profile {
   return {
-    telisme: 5,
-    confrontation: 3,
-    density: 0,
-    energy: 0,
-    register: 0,
+    [axisId("telisme")]: 5,
+    [axisId("confrontation")]: 3,
+    [axisId("density")]: 0,
+    [axisId("energy")]: 0,
+    [axisId("register")]: 0,
   };
 }
 
@@ -115,9 +120,10 @@ Deno.test("BuildPromptService - handles missing axis gracefully", () => {
     descriptionEn: "Description EN",
     promptFragmentFr: "Fragment intro FR",
     promptFragmentEn: "Fragment intro EN",
-    axes: [
-      {
-        id: "telisme",
+    axes: {
+      [axisId("telisme")]: {
+        id: axisId("telisme"),
+        priority: 1,
         initials: ["T"],
         nameFr: "Télisme",
         nameEn: "Telism",
@@ -135,7 +141,7 @@ Deno.test("BuildPromptService - handles missing axis gracefully", () => {
           },
         ],
       },
-    ],
+    },
   };
   const profile = createTestProfile();
 
@@ -153,9 +159,10 @@ Deno.test("BuildPromptService - handles missing level gracefully", () => {
     descriptionEn: "Description EN",
     promptFragmentFr: "Fragment intro FR",
     promptFragmentEn: "Fragment intro EN",
-    axes: [
-      {
-        id: "telisme",
+    axes: {
+      [axisId("telisme")]: {
+        id: axisId("telisme"),
+        priority: 1,
         initials: ["T"],
         nameFr: "Télisme",
         nameEn: "Telism",
@@ -173,7 +180,7 @@ Deno.test("BuildPromptService - handles missing level gracefully", () => {
           },
         ],
       },
-    ],
+    },
   };
   const profile = createTestProfile(); // Uses level 5 for telisme, but spec only has level 3
 

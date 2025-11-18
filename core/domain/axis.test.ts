@@ -3,11 +3,12 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { type Axis, getLevel, isValidLevel } from "./axis.ts";
+import { type Axis, axisId, getLevel, isValidLevel } from "./axis.ts";
 
 function createTestAxis(): Axis {
   return {
-    id: "telisme",
+    id: axisId("telisme"),
+    priority: 1,
     initials: ["T"],
     nameFr: "Télisme",
     nameEn: "Telism",
@@ -55,23 +56,27 @@ Deno.test("getLevel - not found", () => {
   assertEquals(levelDef, undefined);
 });
 
-Deno.test("isValidLevel - valid levels", () => {
-  for (let i = 0; i <= 10; i++) {
-    assertEquals(isValidLevel(i), true);
+Deno.test("isValidLevel - valid defined levels", () => {
+  const axis = createTestAxis();
+  for (const def of axis.levels) {
+    assertEquals(isValidLevel(axis, def.level), true);
   }
 });
 
 Deno.test("isValidLevel - invalid levels (too high)", () => {
-  assertEquals(isValidLevel(11), false);
-  assertEquals(isValidLevel(100), false);
+  const axis = createTestAxis();
+  assertEquals(isValidLevel(axis, 11), false);
+  assertEquals(isValidLevel(axis, 100), false);
 });
 
 Deno.test("isValidLevel - invalid levels (negative)", () => {
-  assertEquals(isValidLevel(-1), false);
-  assertEquals(isValidLevel(-10), false);
+  const axis = createTestAxis();
+  assertEquals(isValidLevel(axis, -1), false);
+  assertEquals(isValidLevel(axis, -10), false);
 });
 
 Deno.test("isValidLevel - invalid levels (non-integer)", () => {
-  assertEquals(isValidLevel(5.5), false);
-  assertEquals(isValidLevel(3.14), false);
+  const axis = createTestAxis();
+  assertEquals(isValidLevel(axis, 5.5), false);
+  assertEquals(isValidLevel(axis, 3.14), false);
 });

@@ -2,7 +2,7 @@
  * Validators and normalizers for user input.
  */
 
-import type { Axis, Level } from "~/core/domain/axis.ts";
+import type { Axis } from "~/core/domain/axis.ts";
 import { resolveLevel } from "~/core/domain/spec.ts";
 
 /**
@@ -11,7 +11,7 @@ import { resolveLevel } from "~/core/domain/spec.ts";
 export function validateLevelInput(
   axis: Axis,
   input: string,
-): Level | undefined {
+): number | undefined {
   const trimmed = input.trim();
   if (trimmed === "") return undefined;
 
@@ -21,8 +21,10 @@ export function validateLevelInput(
 /**
  * Format a level for display (showing number and names).
  */
-export function formatLevel(axis: Axis, level: Level): string {
-  const levelDef = axis.levels.find((l: { level: Level }) => l.level === level);
+export function formatLevel(axis: Axis, level: number): string {
+  const levelDef = axis.levels.find((l: { level: number }) =>
+    l.level === level
+  );
   if (!levelDef) return `${level}`;
 
   return `${level} (${levelDef.nameFr} / ${levelDef.nameEn})`;

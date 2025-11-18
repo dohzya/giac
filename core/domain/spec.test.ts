@@ -4,18 +4,21 @@
 
 import { assertEquals, assertExists } from "@std/assert";
 import {
+  getAxesInPriority,
   getAxisById,
   getAxisIds,
   resolveAxis,
   resolveLevel,
   type Spec,
 } from "./spec.ts";
-import type { Axis, AxisId } from "./axis.ts";
+import { type Axis, type AxisId, axisId } from "./axis.ts";
 
 // Test fixtures
-function createTestAxis(id: AxisId): Axis {
+function createTestAxis(idRaw: string, priority: number): Axis {
+  const id = axisId(idRaw);
   return {
     id,
+    priority,
     initials: [id[0]!.toUpperCase()],
     nameFr: `Axe ${id}`,
     nameEn: `Axis ${id}`,
@@ -55,11 +58,11 @@ function createTestSpec(): Spec {
     descriptionEn: "Description EN",
     promptFragmentFr: "Fragment FR",
     promptFragmentEn: "Fragment EN",
-    axes: [
-      createTestAxis("telisme"),
-      createTestAxis("confrontation"),
-      createTestAxis("density"),
-    ],
+    axes: {
+      [axisId("telisme")]: createTestAxis("telisme", 2),
+      [axisId("confrontation")]: createTestAxis("confrontation", 3),
+      [axisId("density")]: createTestAxis("density", 7),
+    },
   };
 }
 
@@ -105,50 +108,50 @@ Deno.test("resolveAxis - not found", () => {
 });
 
 Deno.test("resolveLevel - by number", () => {
-  const axis = createTestAxis("telisme");
+  const axis = createTestAxis("telisme", 1);
   const level = resolveLevel(axis, 5);
   assertEquals(level, 5);
 });
 
 Deno.test("resolveLevel - by number string", () => {
-  const axis = createTestAxis("telisme");
+  const axis = createTestAxis("telisme", 1);
   const level = resolveLevel(axis, "5");
   assertEquals(level, 5);
 });
 
 Deno.test("resolveLevel - by French name", () => {
-  const axis = createTestAxis("telisme");
+  const axis = createTestAxis("telisme", 1);
   const level = resolveLevel(axis, "Niveau 5");
   assertEquals(level, 5);
 });
 
 Deno.test("resolveLevel - by English name", () => {
-  const axis = createTestAxis("telisme");
+  const axis = createTestAxis("telisme", 1);
   const level = resolveLevel(axis, "Level 10");
   assertEquals(level, 10);
 });
 
 Deno.test("resolveLevel - invalid number (too high)", () => {
-  const axis = createTestAxis("telisme");
+  const axis = createTestAxis("telisme", 1);
   const level = resolveLevel(axis, 11);
   assertEquals(level, undefined);
 });
 
 Deno.test("resolveLevel - invalid number (negative)", () => {
-  const axis = createTestAxis("telisme");
+  const axis = createTestAxis("telisme", 1);
   const level = resolveLevel(axis, -1);
   assertEquals(level, undefined);
 });
 
 Deno.test("resolveLevel - not found", () => {
-  const axis = createTestAxis("telisme");
+  const axis = createTestAxis("telisme", 1);
   const level = resolveLevel(axis, "nonexistent");
   assertEquals(level, undefined);
 });
 
 Deno.test("getAxisById - found", () => {
   const spec = createTestSpec();
-  const axis = getAxisById(spec, "telisme");
+  const axis = getAxisById(spec, axisId("telisme"));
   assertExists(axis);
   assertEquals(axis.id, "telisme");
 });
@@ -159,12 +162,17 @@ Deno.test("getAxisById - not found", () => {
   assertEquals(axis, undefined);
 });
 
-Deno.test("getAxisIds - returns all axis IDs", () => {
-  const ids = getAxisIds();
-  assertEquals(ids.length, 5);
-  assertEquals(ids[0], "telisme");
-  assertEquals(ids[1], "confrontation");
-  assertEquals(ids[2], "density");
-  assertEquals(ids[3], "energy");
-  assertEquals(ids[4], "register");
+Deno.test("getAxisIds - returns dynamic axis IDs", () => {
+  const spec = createTestSpec();
+  const ids = getAxisIds(spec).slice().sort((a, b) => a.localeCompare(b));
+  const expected = ["confrontation", "density", "telisme"].sort((a, b) =>
+    a.localeCompare(b)
+  );
+  assertEquals(ids, expected);
+});
+
+Deno.test("getAxesInPriority - sorts by priority ascending", () => {
+  const spec = createTestSpec();
+  const ordered = getAxesInPriority(spec).map((a) => a.id);
+  assertEquals(ordered, ["telisme", "confrontation", "density"]); // priorities 2,3,7
 });

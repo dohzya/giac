@@ -1,44 +1,38 @@
 /**
  * Domain model for the complete specification: all axes and metadata.
+ * Axes are stored in a record keyed by AxisId (spec-driven).
  */
 
-import type { Axis, AxisId, Level } from "./axis.ts";
-import { ExplicitCast } from "../common/explicit_cast.ts";
+import type { Axis, AxisId } from "./axis.ts";
 
 export interface Spec {
   readonly descriptionFr: string;
   readonly descriptionEn: string;
   readonly promptFragmentFr: string;
   readonly promptFragmentEn: string;
-  readonly axes: readonly Axis[];
+  readonly axes: Record<AxisId, Axis>; // dynamic set
 }
 
 /**
  * Resolve an axis identifier from various inputs (id, initials, names FR/EN).
  */
-export function resolveAxis(
-  spec: Spec,
-  input: string,
-): Axis | undefined {
+export function resolveAxis(spec: Spec, input: string): Axis | undefined {
   const normalized = input.toLowerCase().trim();
+  const values = Object.values(spec.axes);
 
-  const byId = spec.axes.find((a) => a.id === normalized);
+  const byId = values.find((a) => a.id === normalized);
   if (byId) return byId;
 
-  for (const axis of spec.axes) {
+  for (const axis of values) {
     if (axis.initials.some((init) => init.toLowerCase() === normalized)) {
       return axis;
     }
   }
 
-  const byNameFr = spec.axes.find(
-    (a) => a.nameFr.toLowerCase() === normalized,
-  );
+  const byNameFr = values.find((a) => a.nameFr.toLowerCase() === normalized);
   if (byNameFr) return byNameFr;
 
-  const byNameEn = spec.axes.find(
-    (a) => a.nameEn.toLowerCase() === normalized,
-  );
+  const byNameEn = values.find((a) => a.nameEn.toLowerCase() === normalized);
   if (byNameEn) return byNameEn;
 
   return undefined;
@@ -50,31 +44,33 @@ export function resolveAxis(
 export function resolveLevel(
   axis: Axis,
   input: string | number,
-): Level | undefined {
+): number | undefined {
   if (typeof input === "number") {
-    if (Number.isInteger(input) && input >= 0 && input <= 10) {
-      return ExplicitCast.from<number>(input).cast<Level>();
+    if (Number.isInteger(input) && axis.levels.some((l) => l.level === input)) {
+      return input;
     }
     return undefined;
   }
 
   const normalized = input.toLowerCase().trim();
-
   const num = Number.parseInt(normalized, 10);
-  if (!Number.isNaN(num) && num >= 0 && num <= 10) {
-    return ExplicitCast.from<number>(num).cast<Level>();
+  if (
+    !Number.isNaN(num) &&
+    Number.isInteger(num) &&
+    axis.levels.some((l) => l.level === num)
+  ) {
+    return num;
   }
 
-  const byNameFr = axis.levels.find(
-    (l) => l.nameFr.toLowerCase() === normalized,
+  const byNameFr = axis.levels.find((l) =>
+    l.nameFr.toLowerCase() === normalized
   );
   if (byNameFr) return byNameFr.level;
 
-  const byNameEn = axis.levels.find(
-    (l) => l.nameEn.toLowerCase() === normalized,
+  const byNameEn = axis.levels.find((l) =>
+    l.nameEn.toLowerCase() === normalized
   );
   if (byNameEn) return byNameEn.level;
-
   return undefined;
 }
 
@@ -82,12 +78,16 @@ export function resolveLevel(
  * Get an axis by its ID.
  */
 export function getAxisById(spec: Spec, id: AxisId): Axis | undefined {
-  return spec.axes.find((a) => a.id === id);
+  return spec.axes[id];
 }
 
 /**
  * Get all axis IDs in priority order.
  */
-export function getAxisIds(): readonly AxisId[] {
-  return ["telisme", "confrontation", "density", "energy", "register"] as const;
+export function getAxisIds(spec: Spec): readonly AxisId[] {
+  return Object.keys(spec.axes).map((k) => k as AxisId);
+}
+
+export function getAxesInPriority(spec: Spec): readonly Axis[] {
+  return Object.values(spec.axes).sort((a, b) => a.priority - b.priority);
 }

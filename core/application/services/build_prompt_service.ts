@@ -7,37 +7,29 @@ import type { BuildPromptUseCase, Language } from "../ports/in/build_prompt.ts";
 import type { Profile } from "~/core/domain/profile.ts";
 import type { Prompt } from "~/core/domain/prompt.ts";
 import type { Spec } from "~/core/domain/spec.ts";
-import { getAxisById, getAxisIds } from "~/core/domain/spec.ts";
+import { getAxesInPriority } from "~/core/domain/spec.ts";
 import { getLevel } from "~/core/domain/axis.ts";
 
 export class BuildPromptService implements BuildPromptUseCase {
   execute(spec: Spec, profile: Profile, lang: Language): Prompt {
     const lines: string[] = [];
-
     const header = lang === "fr"
       ? spec.promptFragmentFr
       : spec.promptFragmentEn;
-    lines.push(header);
-    lines.push("");
+    lines.push(header, "");
 
-    const axisIds = getAxisIds();
+    const axes = getAxesInPriority(spec);
     const profileParts: string[] = [];
-    for (const axisId of axisIds) {
-      const axis = getAxisById(spec, axisId);
-      if (!axis) continue;
-
+    for (const axis of axes) {
       const axisName = lang === "fr" ? axis.nameFr : axis.nameEn;
-      const level = profile[axisId];
+      const level = profile[axis.id];
       profileParts.push(`${axisName}=${level}`);
     }
-    lines.push(`Profil: ${profileParts.join(" ")}`);
-    lines.push("");
+    lines.push(`Profil: ${profileParts.join(" ")}`, "");
 
-    for (const axisId of axisIds) {
-      const axis = getAxisById(spec, axisId);
-      if (!axis) continue;
-
-      const level = profile[axisId];
+    for (const axis of axes) {
+      const level = profile[axis.id];
+      if (level === undefined) continue;
       const levelDef = getLevel(axis, level);
       if (!levelDef) continue;
 

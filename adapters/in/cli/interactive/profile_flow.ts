@@ -6,7 +6,7 @@
 import type { Spec } from "~/core/domain/spec.ts";
 import type { PartialProfile, Profile } from "~/core/domain/profile.ts";
 import { getMissingAxes } from "~/core/domain/profile.ts";
-import { getAxisById } from "~/core/domain/spec.ts";
+import { getAxesInPriority, getAxisById } from "~/core/domain/spec.ts";
 import type { AxisId } from "~/core/domain/axis.ts";
 import type { Language } from "~/core/application/ports/in/build_prompt.ts";
 import { formatAvailableLevels, validateLevelInput } from "./validators.ts";
@@ -59,7 +59,10 @@ export async function buildProfileInteractively(
   partial: PartialProfile,
   lang: Language,
 ): Promise<Profile> {
-  const missing = getMissingAxes(partial);
+  const missing = getMissingAxes(
+    partial,
+    getAxesInPriority(spec).map((a) => a.id),
+  );
   const profile: PartialProfile = { ...partial };
 
   for (const axisId of missing) {

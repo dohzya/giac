@@ -8,7 +8,7 @@ import type { BuildPromptUseCase } from "~/core/application/ports/in/build_promp
 import type { GetSpecUseCase } from "~/core/application/ports/in/get_spec.ts";
 import type { Spec } from "~/core/domain/spec.ts";
 import type { PartialProfile, Profile } from "~/core/domain/profile.ts";
-import type { Level } from "~/core/domain/axis.ts";
+import { axisId } from "~/core/domain/axis.ts";
 
 // Test fixtures (inline)
 const createTestSpec = (): Spec => ({
@@ -16,9 +16,10 @@ const createTestSpec = (): Spec => ({
   descriptionEn: "Test spec EN",
   promptFragmentFr: "Fragment FR",
   promptFragmentEn: "Fragment EN",
-  axes: [
-    {
-      id: "telisme",
+  axes: {
+    [axisId("telisme")]: {
+      id: axisId("telisme"),
+      priority: 1,
       initials: ["T", "I"],
       nameFr: "Télisme",
       nameEn: "Initiative",
@@ -27,15 +28,16 @@ const createTestSpec = (): Spec => ({
       promptFragmentFr: "Télisme fragment FR",
       promptFragmentEn: "Initiative fragment EN",
       levels: Array.from({ length: 11 }, (_, i) => ({
-        level: i as Level,
+        level: i,
         nameFr: `Niveau ${i}`,
         nameEn: `Level ${i}`,
         promptFragmentFr: `Fragment FR ${i}`,
         promptFragmentEn: `Fragment EN ${i}`,
       })),
     },
-    {
-      id: "confrontation",
+    [axisId("confrontation")]: {
+      id: axisId("confrontation"),
+      priority: 2,
       initials: ["C"],
       nameFr: "Confrontation",
       nameEn: "Challenge",
@@ -44,15 +46,16 @@ const createTestSpec = (): Spec => ({
       promptFragmentFr: "Confrontation fragment FR",
       promptFragmentEn: "Challenge fragment EN",
       levels: Array.from({ length: 11 }, (_, i) => ({
-        level: i as Level,
+        level: i,
         nameFr: `Niveau ${i}`,
         nameEn: `Level ${i}`,
         promptFragmentFr: `Fragment FR ${i}`,
         promptFragmentEn: `Fragment EN ${i}`,
       })),
     },
-    {
-      id: "density",
+    [axisId("density")]: {
+      id: axisId("density"),
+      priority: 3,
       initials: ["D"],
       nameFr: "Densité",
       nameEn: "Density",
@@ -61,15 +64,16 @@ const createTestSpec = (): Spec => ({
       promptFragmentFr: "Densité fragment FR",
       promptFragmentEn: "Density fragment EN",
       levels: Array.from({ length: 11 }, (_, i) => ({
-        level: i as Level,
+        level: i,
         nameFr: `Niveau ${i}`,
         nameEn: `Level ${i}`,
         promptFragmentFr: `Fragment FR ${i}`,
         promptFragmentEn: `Fragment EN ${i}`,
       })),
     },
-    {
-      id: "energy",
+    [axisId("energy")]: {
+      id: axisId("energy"),
+      priority: 4,
       initials: ["E"],
       nameFr: "Énergie",
       nameEn: "Energy",
@@ -78,15 +82,16 @@ const createTestSpec = (): Spec => ({
       promptFragmentFr: "Énergie fragment FR",
       promptFragmentEn: "Energy fragment EN",
       levels: Array.from({ length: 11 }, (_, i) => ({
-        level: i as Level,
+        level: i,
         nameFr: `Niveau ${i}`,
         nameEn: `Level ${i}`,
         promptFragmentFr: `Fragment FR ${i}`,
         promptFragmentEn: `Fragment EN ${i}`,
       })),
     },
-    {
-      id: "register",
+    [axisId("register")]: {
+      id: axisId("register"),
+      priority: 5,
       initials: ["R"],
       nameFr: "Registre",
       nameEn: "Register",
@@ -95,14 +100,14 @@ const createTestSpec = (): Spec => ({
       promptFragmentFr: "Registre fragment FR",
       promptFragmentEn: "Register fragment EN",
       levels: Array.from({ length: 11 }, (_, i) => ({
-        level: i as Level,
+        level: i,
         nameFr: `Niveau ${i}`,
         nameEn: `Level ${i}`,
         promptFragmentFr: `Fragment FR ${i}`,
         promptFragmentEn: `Fragment EN ${i}`,
       })),
     },
-  ],
+  },
 });
 
 // Mock implementations
@@ -117,7 +122,11 @@ class MockBuildPromptUseCase implements BuildPromptUseCase {
 
   execute(_spec: Spec, profile: Profile, _lang: "fr" | "en"): string {
     this.#lastProfile = profile;
-    return `Mock prompt for profile: T=${profile.telisme} C=${profile.confrontation} D=${profile.density} E=${profile.energy} R=${profile.register}`;
+    return `Mock prompt for profile: T=${profile[axisId("telisme")]} C=${
+      profile[axisId("confrontation")]
+    } D=${profile[axisId("density")]} E=${profile[axisId("energy")]} R=${
+      profile[axisId("register")]
+    }`;
   }
 
   getLastProfile(): Profile | undefined {
@@ -151,13 +160,11 @@ Deno.test("executeBuildPrompt - builds prompt with complete profile", async () =
 
     const profile = buildPrompt.getLastProfile();
     assertEquals(exitCalled, false);
-    assertEquals(profile, {
-      telisme: 5,
-      confrontation: 3,
-      density: 7,
-      energy: 2,
-      register: 8,
-    });
+    assertEquals(profile![axisId("telisme")], 5);
+    assertEquals(profile![axisId("confrontation")], 3);
+    assertEquals(profile![axisId("density")], 7);
+    assertEquals(profile![axisId("energy")], 2);
+    assertEquals(profile![axisId("register")], 8);
   } finally {
     Deno.exit = originalExit;
   }
@@ -182,13 +189,11 @@ Deno.test("executeBuildPrompt - uses abbreviated axis names", async () => {
 
     const profile = buildPrompt.getLastProfile();
     assertEquals(exitCalled, false);
-    assertEquals(profile, {
-      telisme: 8,
-      confrontation: 4,
-      density: 6,
-      energy: 3,
-      register: 9,
-    });
+    assertEquals(profile![axisId("telisme")], 8);
+    assertEquals(profile![axisId("confrontation")], 4);
+    assertEquals(profile![axisId("density")], 6);
+    assertEquals(profile![axisId("energy")], 3);
+    assertEquals(profile![axisId("register")], 9);
   } finally {
     Deno.exit = originalExit;
   }
@@ -234,15 +239,13 @@ Deno.test("executeBuildPrompt - prompts for missing axes (interactive mode)", as
     _partial: PartialProfile,
     _lang: "fr" | "en",
   ): Promise<Profile> =>
-    Promise.resolve(
-      {
-        telisme: 1,
-        confrontation: 2,
-        density: 3,
-        energy: 4,
-        register: 5,
-      } as const,
-    );
+    Promise.resolve({
+      [axisId("telisme")]: 1,
+      [axisId("confrontation")]: 2,
+      [axisId("density")]: 3,
+      [axisId("energy")]: 4,
+      [axisId("register")]: 5,
+    });
 
   const originalExit = Deno.exit;
   let exitCalled = false;
@@ -259,13 +262,11 @@ Deno.test("executeBuildPrompt - prompts for missing axes (interactive mode)", as
     );
     const profile = buildPrompt.getLastProfile();
     assertEquals(exitCalled, false);
-    assertEquals(profile, {
-      telisme: 1,
-      confrontation: 2,
-      density: 3,
-      energy: 4,
-      register: 5,
-    });
+    assertEquals(profile![axisId("telisme")], 1);
+    assertEquals(profile![axisId("confrontation")], 2);
+    assertEquals(profile![axisId("density")], 3);
+    assertEquals(profile![axisId("energy")], 4);
+    assertEquals(profile![axisId("register")], 5);
   } finally {
     Deno.exit = originalExit;
   }

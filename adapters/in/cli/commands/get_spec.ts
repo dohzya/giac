@@ -61,7 +61,7 @@ export async function executeGetSpec(
       ui.title(`=== ${msg.titleSpecification} ===`);
       ui.info(`\n${lang === "fr" ? spec.descriptionFr : spec.descriptionEn}`);
 
-      for (const axis of spec.axes) {
+      for (const axis of Object.values(spec.axes)) {
         const axisName = lang === "fr" ? axis.nameFr : axis.nameEn;
         ui.title(`\n${axisName}`);
 

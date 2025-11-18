@@ -29,7 +29,9 @@ prompt_fragment_en: |-
   Arbitration: if a lower-priority axis (e.g., Register) conflicts with a higher-priority axis (e.g., Initiative), minimally adapt the lower axis to preserve the higher axis’s intent. The axes are independent: elevated style does not imply more length; high intensity does not imply more firmness; challenge targets content.
 
 axes:
-  - initials: ["T", "I"]
+  telisme:
+    priority: 1
+    initials: ["T", "I"]
     name_fr: Télisme
     name_en: Initiative
     description_fr: |-
@@ -99,7 +101,9 @@ axes:
         prompt_fragment_fr: "Tranche et engage un plan détaillé, en assumant les compromis et les critères de réussite."
         prompt_fragment_en: "Take a stance and commit to a detailed plan, owning trade-offs and success criteria."
 
-  - initials: ["C"]
+  confrontation:
+    priority: 2
+    initials: ["C"]
     name_fr: Confrontation
     name_en: Challenge
     description_fr: |-
@@ -169,7 +173,9 @@ axes:
         prompt_fragment_fr: "Tolérance zéro aux erreurs de contenu ; corrige immédiatement et explicitement, sans prescrire d’action."
         prompt_fragment_en: "Zero tolerance for content errors; correct immediately and explicitly, without prescribing action."
 
-  - initials: ["D"]
+  density:
+    priority: 3
+    initials: ["D"]
     name_fr: Densité
     name_en: Density
     description_fr: |-
@@ -239,7 +245,9 @@ axes:
         prompt_fragment_fr: "Panorama quasi complet : alternatives, justifications, limites et repères/sources."
         prompt_fragment_en: "Near-complete panorama: alternatives, justifications, limits, and references."
 
-  - initials: ["E"]
+  energy:
+    priority: 4
+    initials: ["E"]
     name_fr: Énergie
     name_en: Energy
     description_fr: |-
@@ -309,7 +317,9 @@ axes:
         prompt_fragment_fr: "Intensité maximale ; aucun débordement ni dispersion ; contrôle permanent."
         prompt_fragment_en: "Maximum intensity; no overflow or scatter; sustained control."
 
-  - initials: ["R"]
+  register:
+    priority: 5
+    initials: ["R"]
     name_fr: Registre
     name_en: Register
     description_fr: |-
