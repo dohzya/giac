@@ -1,55 +1,149 @@
 # AGENTS.md
 
-> Engineering principles & coding standards for this repository (TypeScript on
-> **Deno 2**).\
-> **Audience**: all contributors (code, tests, scripts).\
-> **Code/docs/logs language**: English (US).
+## Behavior
+
+> **Scope & precedence.** Rules in this section are the baseline. They may be
+> refined by later sections (technical stacks, then project sections).
+
+### 1) Agent Conversational Behavior (for AI agents)
+
+- Value **truth & clarity** over diplomacy.
+- When a user (human or tool) is wrong, **say it explicitly** and explain why.
+- Do not "yes-please" the user:
+  - avoid agreeing with incorrect statements;
+  - correct factual/logical mistakes directly, with short justification.
+- Foster user understanding:
+  - prefer small, focused explanations over walls of text;
+  - name the concept, then show a concrete example.
+- Keep responses **goal-oriented**:
+  - answer the question;
+  - add just enough context to avoid confusion;
+  - no filler, no small talk unless explicitly requested.
+
+**Also:**
+
+- Value directness over diplomacy.
+- End replies immediately after delivering information; no extra openings/closures except to remove ambiguity.
+- Aim for user understanding and mastery.
+- Either side may err; identify and correct factual/logical mistakes explicitly.
+- Do not spend time affirming correctness; verify it.
 
 ---
 
-## 1) Language & Domain Terms
+### 2) Language & Domain Terms
 
-- **Default**: English (US) everywhere (identifiers, comments, docs, APIs).
-- **Exception**: French business terms allowed **only** if listed in
-  **GLOSSARY.md**.
-- **Mixing rule**: treat accepted French tokens as atomic (`SIRET`, `facture`),
-  keep the rest in English (`factureId`, `parseSiret`). If not in glossary → use
-  English.
+- **Default**: English (US) everywhere (identifiers, comments, docs, logs, APIs).
+- Domain/business terms in other languages are allowed **only** if listed in a `GLOSSARY.md` file.
+  - If a term is not in the glossary → use an English equivalent.
+- Treat accepted non-English terms as **atomic tokens** (`SIRET`, `facture`), but keep surrounding words in English (`factureId`, `parse_siret` - but respect the naming conventions of the chosen stack or project.).
 
 ---
 
-## 2) Code Style (Deno-first)
+### 3) Comments & Documentation
 
-- Use Deno’s built-ins: `deno fmt`, `deno task lint`, (which uses `deno check`
-  and `deno lint`), `deno task test` (which uses `deno test`). Configure via
-  `deno.json(c)`.
-- Prefer the **Deno stdlib** (`@std/*`) and **JSR** packages with versioned
-  imports. Avoid unversioned specifiers.
-- **Files**: underscores (no dashes), avoid `index.ts`/`index.js`; use `mod.ts`
-  for entrypoints.
-- **Top-level functions**: use the `function` keyword (arrow only for closures).
-- **Private fields**: prefer `#` over `private` (runtime privacy).
-- **JSDoc** for exported APIs; each module should have explicit unit tests.
-- **Error messages**: sentence case, **no trailing period**, quote string
-  values, state the action, active voice.
+- Write **only comments that add information not inferable from the code**.
+  - Explain **why** the code is written this way or **when** to use it.
+  - Do **not** restate what the code already says.
+- Prefer:
+  - small, focused comments close to the code they clarify;
+  - higher-level docs for workflows, invariants, and architecture.
 
 ---
 
-## 3) Naming & Casing
+### 4) Explicit > Implicit
 
-- `camelCase` for functions, methods, fields, locals.
-- `PascalCase` for classes, types, interfaces, enums.
-- `UPPER_SNAKE_CASE` for top-level constants.
+- Prefer **explicit, predictable behavior** over clever or implicit shortcuts.
+- Avoid "magic":
+  - no hidden global state;
+  - no silent mutation of parameters;
+  - no surprising side effects in helpers that look like pure functions.
+- Make data flow, responsibilities and ownership obvious in the code.
+- Fail fast: validate external input early, return/raise clear errors.
 
 ---
 
-## 4) Function Signatures (public API)
+### 5) Command–Query Separation (CQS)
 
-- ≤ 2 required positionals; the rest in a typed `options` object (defined just
-  above the function).
-- Keep options **readonly** when possible; prefer discriminated unions for
-  modes.
+- A function/module should either be a **command** (changes state) or a **query** (observes state), not both.
+- **Commands**:
+  - perform side effects or mutations;
+  - return void/acknowledgement/ID/version, not domain data.
+- **Queries**:
+  - do not mutate anything;
+  - return data only, no side effects.
+- **Naming**:
+  - commands: `create*`, `update*`, `delete*`, `assign*`, `rebuild*`;
+  - queries: `get*`, `find*`, `list*`, `is*`, `has*`, `count*`.
+- For HTTP:
+  - `GET` → queries only, no mutation;
+  - `POST/PUT/PATCH/DELETE` → commands (mutating operations).
 
+---
+
+### 6) Error Handling & Safety
+
+- Be explicit about **what can fail** and **how**:
+  - when possible, return an error type instead of throwing;
+  - a function that can throw should make it clear in its name (or at the very least in its docs);
+  - do not rely on silent empty or sentinel values to indicate errors.
+- Any interaction with the outside world (network, filesystem, user input, environment) must:
+  - validate any data that comes from outside the system (input, config, API responses);
+  - handle failures in a controlled way;
+  - avoid leaking secrets in logs or error messages.
+
+---
+
+### 7) Code Structure
+
+- Prefer **composition over duplication**:
+  - shared behaviors belong in small, focused helpers;
+  - avoid copy-pasting complex logic.
+- Keep modules cohesive:
+  - one clear responsibility per module;
+  - minimal, well-defined public surface.
+
+---
+
+### 8) Logs compliance before emission
+
+- Ensure logs are **compliant before emission**: apply redaction/masking/aggregation when needed.
+- If in doubt, **withhold or rewrite the log** rather than risking sensitive leakage.
+- Project-specific rules, if present, take precedence when stricter.
+
+---
+
+## Technical stack (Deno 2 / TypeScript) — project‑agnostic
+
+> **Scope & precedence.** Technology-specific rules here refine the baseline
+> Behavior. They may be **overridden by a project section**. When this section
+> conflicts with Behavior on implementation details, **this section wins**.
+
+### 1) Tooling & project layout
+
+- Use **TypeScript in `strict` mode**; disallow implicit `any`.
+- Prefer **Deno built-ins** for the toolchain; no parallel formatters/linters:
+  - **Formatter**: `deno fmt` (configured in `deno.json(c)`).
+  - **Linter**: `deno lint` (TypeScript-aware; configure rules in `deno.json(c)`).
+  - **Type checking**: `deno check` (or implicit checking in `deno test/run`).
+  - **Testing**: `deno test`.
+- Manage imports with `deno.json(c)` **import map**. Prefer **JSR** packages (`jsr:`) and **Deno std** (`@std/*`). If using `npm:` specifiers, pin versions.
+- **Versioned imports only** (JSR ranges like `@^1` or exact versions like `@1.2.3`). Avoid unversioned remote URLs.
+- **Module layout & naming**:
+  - use **underscores** in filenames; avoid dashes;
+  - avoid `index.ts` and `index.js`; prefer `mod.ts` as entrypoint;
+  - one responsibility per module; keep public surface minimal and intentional.
+- **Documentation**:
+  - exported APIs must have **JSDoc** with parameter/return/error semantics;
+  - place higher-level docs (architecture, invariants, workflows) near entrypoints.
+
+---
+
+### 2) Runtime & module conventions (framework-agnostic)
+
+- **Top-level functions**: use the `function` keyword; use arrow functions for small inline closures/lambdas.
+- **Classes & privacy**: prefer ECMAScript private fields `#` for runtime privacy over `private`.
+- **Configuration**: read environment/config at process start, validate (see §3), and pass typed config objects through the app; avoid global mutable state.
+- **Public API signatures**: ≤ 2 required positional parameters; the rest in a typed `options` object defined immediately above the function. Prefer `readonly` options and discriminated unions for modes.
 ```ts
 export interface CreateOptions {
   readonly from?: string;
@@ -62,108 +156,73 @@ export function create(branch: string, options: CreateOptions = {}): void {
 }
 ```
 
----
-
-## 5) Type Safety
-
-- TS `strict` everywhere. Avoid `any`; prefer `unknown` + narrowing, `never`,
-  `readonly`, `satisfies`, discriminated unions.
-- **Type assertions**: Never use `as` type assertions directly. Always use
-  `ExplicitCast` from `~/core/common/explicit_cast.ts`:
-  - `ExplicitCast.unknown(value)` to force considering `any` values (e.g.,
-    JSON.parse results) as unknown.
-  - `ExplicitCast.from<T>(value).cast()` for type-safe casts. The type parameter
-    on `from` clarifies what you think you're casting from, helping catch type
-    changes. You can optionally type `cast()` but it's not strictly necessary.
-  - `ExplicitCast.from<T>(value).dangerousCast<TResult>()` only when necessary
-    (e.g., building objects incrementally)
-- Isolate unavoidable casts in tiny helpers with a one-line justification.
-- Validate external inputs early; fail fast with clear errors.
-- **Error handling**: Prefer returning `Result | ErrorType` (where
-  `ErrorType extends Error`) over throwing. If a function throws, make it
-  explicit in the name (e.g., `parseMonthOrThrow`). Use `parseMonth` for safe
-  parsing that returns `Month | ParsingError`.
+- **Error messages**: sentence case, no trailing period; quote string values where helpful; state the action, active voice.
 
 ---
 
-## 6) Command–Query Separation (CQS)
+### 3) Validation & types (schema-first)
 
-- A function is either a **command** (mutates state) or a **query** (returns
-  data). Not both.
-- **Naming**: commands `create/update/delete/assign/rebuildIndex`; queries
-  `get/find/list/is/has/count`.
-- **Returns**: commands → ack/id/version/`void`; queries → data only.
-- **HTTP**: `GET` = queries; `POST/PUT/PATCH/DELETE` = commands. No mutation on
-  `GET`.
+- Validate **all external boundaries** (HTTP payloads, CLI args, env/config, external API responses) with a runtime schema library.
+  - Prefer **Zod 4 mini** (`jsr:@zod/zod`) or **Valibot** (`jsr:`) depending on constraints.
+  - Derive TS types from schemas (e.g. `z.infer<typeof Schema>`) to avoid duplication.
+- Keep **domain types** distinct from transport/DTO types; convert at the edges.
+- Do not bypass validation at the boundaries; downstream code should operate on validated, typed data only.
 
 ---
 
-## 7) Modules & Dependencies
+### 4) Types & safety
 
-- Prefer **JSR** (`jsr:`) & **@std** via `deno.jsonc`'s `"imports"` (works as
-  import map). Use versions (`@^1`, `@1.0.9`, etc.).
-- **Lint**: enable rules that prevent risky patterns (e.g.
-  `no-unversioned-import`, `no-import-prefix`).
+- Avoid `any`; prefer `unknown` with **narrowing**, **discriminated unions**, `never`, `readonly`, and `satisfies`.
+- Model domain concepts with **nominal-ish** types (tagged wrappers) rather than raw `string`/`number` where it improves safety.
+- Public APIs must be fully typed and stable; do not leak infra-specific or transient shapes.
+- Handle `null`/`undefined` explicitly; avoid magic sentinel values.
 
 ---
 
-## 8) Permissions & Security (Deno 2)
+### 5) Async, errors & I/O
 
-- Secure-by-default: no FS/net/env/run access unless granted.
-- Define **permission sets** in `deno.jsonc` and opt in with `-P` (or
-  `-P <name>`). Avoid `-A` in CI/prod.
-- Scope permissions narrowly (paths, hostnames, specific executables). Consider
-  enabling permission **audit logs** in CI.
+- Prefer `async/await`; avoid deep `.then().catch()` chains.
+- **Error policy**:
+  - surface failures as **error types/results** where practical; otherwise throw typed errors with clear messages;
+  - when throwing is part of the contract, **make it explicit** (name or docs, e.g. `parseXOrThrow`).
+- **Result-first style**: Prefer returning `Result | ErrorType` (where `ErrorType` extends `Error`) over throwing when feasible; if a function can throw, make it explicit in the name (e.g., `parseMonthOrThrow`) and offer a safe counterpart (e.g., `parseMonth`).
+- **External I/O** (FS, network, subprocess, env):
+  - validate inputs; set explicit timeouts, retries, and backoff when appropriate;
+  - keep adapters behind interfaces to decouple third-party clients from domain logic.
+- **Logging**: emit **structured JSON** logs; never log secrets or raw PII. Prefer platform collectors or OpenTelemetry exporters when available.
 
-Example permission sets in `deno.jsonc`:
+---
+
+### 6) Testing
+
+- $1
+- Coverage: `deno test --coverage=coverage`.
+- Keep unit tests fast and deterministic; fake I/O; avoid relying on real network/FS unless the test is explicitly integration-level.
+- Use **permission scoping** for tests (see §7) to ensure isolation and repeatability.
+- Prefer black-box tests against public APIs over tests coupled to private details.
+
+---
+
+### 7) Permissions & security (Deno)
+
+- **Secure by default**: deny FS/net/env/run access unless explicitly granted.
+- Define **named permission sets** in `deno.json(c)` and opt into them via CLI flags. Avoid `-A` in CI/prod.
+- Scope permissions narrowly (paths, hostnames, specific executables).
+- Consider enabling **permission prompts/audit** in dev and policy files in CI.
+- Ensure logs and errors never leak secrets/PII; redact before emission.
+
+**Example (illustrative):**
 
 ```jsonc
 {
   "permissions": {
-    "default": {
-      "read": ["./spec.yml"],
-      "env": ["GIAC_LANG", "TELISME_VALUE"]
-    },
-    "tests": {
-      "read": ["./", "./spec.yml"],
-      "env": true
-    }
-  },
-  "tasks": {
-    "test": "deno test -P=tests",
-    "dev": "deno run -P mod.ts"
+    "default": { "read": ["./config/"] },
+    "tests": { "read": ["./"], "env": true }
   }
 }
 ```
 
----
-
-## 9) Dev Loop & CI
-
-- Local loop: **fmt → lint → check → test** (tasked in `deno.jsonc`).
-- CI must enforce fmt/lint/check/tests.
-- Prefer permissioned tasks (`-P`) in dev/test/compile.
-
----
-
-## 10) Logging & Observability
-
-- **Do not rely on `@std/log`** for production (slated for removal). Prefer
-  OpenTelemetry/structured JSON logs collected by the platform. Never log
-  secrets/PII.
-
----
-
-## 11) Testing
-
-- Run tests with `deno task test` (it includes coverage `--coverage=coverage`).
-- Tests are based on `@std/assert`. Table-driven tests where useful.
-- Keep unit tests fast/deterministic; fake IO; isolate permissions via test
-  permission set.
-
----
-
-## 12) Examples
+### 8) Examples
 
 **CQS naming:**
 
@@ -187,7 +246,7 @@ export async function updateUserPermissions(
 ): Promise<void> {/* ... */}
 ```
 
-**Error handling (prefer Result over throw):**
+**Error handling (result-first + throw variant):**
 
 ```ts
 export class ParsingError extends Error {
@@ -198,16 +257,38 @@ export class ParsingError extends Error {
 }
 
 export function parseMonth(raw: string): Month | ParsingError {
-  // Isolates parsing & validation in one place
-  // Returns ParsingError on invalid format
   /* ... */
 }
 
 export function parseMonthOrThrow(raw: string): Month {
   const result = parseMonth(raw);
-  if (result instanceof ParsingError) {
-    throw result;
-  }
+  if (result instanceof ParsingError) throw result;
   return result;
 }
 ```
+
+---
+
+## Project specificities
+
+**Scope & precedence.** This section overrides any previous section (Behavior
+and Technical stack) where there is a conflict. If silent on a topic, previous
+sections apply unchanged.
+
+### 1) Type casting policy (ExplicitCast)
+
+- Use the local helper **`ExplicitCast`** (`~/core/common/explicit_cast.ts`) to isolate and justify casts:
+  - `ExplicitCast.unknown(value)` to force treating dynamic values (e.g., `JSON.parse`) as `unknown`.
+  - `ExplicitCast.from<T>(value).cast()` for type-safe casts (with `T` documenting the assumed source type).
+  - `ExplicitCast.from<T>(value).dangerousCast<TResult>()` only as a last resort (e.g., incremental object construction).
+- Isolate unavoidable casts in tiny helpers with a one-line justification.
+
+### 2) Dev loop & CI
+
+- Local loop tasks (declared in `deno.json(c)`):
+  - `deno task fmt` → formatting
+  - `deno task lint` → linting
+  - `deno task check` → type checking
+  - `deno task test` → tests
+- CI is **blocking** on fmt/lint/check/tests.
+- Prefer permissioned tasks (named `-P` sets) in dev/test/compile.
