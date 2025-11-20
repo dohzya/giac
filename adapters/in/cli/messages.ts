@@ -37,6 +37,7 @@ export interface Messages {
   readonly labelLevels: string;
   readonly labelProfile: string;
   readonly promptLabelProfile: string;
+  readonly promptBehaviorIntro: string; // Intro line before level-specific behavior instructions
 
   // Titles
   readonly titleSpecification: string;
@@ -82,6 +83,7 @@ export function getMessages(lang: Language): Messages {
       labelLevels: "Niveaux :",
       labelProfile: "Profil :",
       promptLabelProfile: "Profil souhaité :",
+      promptBehaviorIntro: "Instructions relatives au comportement :",
 
       // Titles
       titleSpecification: "Spécification GIAC",
@@ -120,6 +122,7 @@ export function getMessages(lang: Language): Messages {
     labelLevels: "Levels:",
     labelProfile: "Profile:",
     promptLabelProfile: "Desired profile:",
+    promptBehaviorIntro: "Behavior instructions:",
 
     // Titles
     titleSpecification: "GIAC Specification",

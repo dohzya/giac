@@ -17,18 +17,12 @@ export class BuildPromptService implements BuildPromptUseCase {
     const header = lang === "fr"
       ? spec.promptFragmentFr
       : spec.promptFragmentEn;
-    lines.push(header, "");
+    lines.push(header);
 
     const messages = getMessages(lang);
-    const axes = getAxesInPriority(spec);
-    const profileParts: string[] = [];
-    for (const axis of axes) {
-      const axisName = lang === "fr" ? axis.nameFr : axis.nameEn;
-      const level = profile[axis.id];
-      profileParts.push(`${axisName}=${level}`);
-    }
-    lines.push(`${messages.promptLabelProfile} ${profileParts.join(" ")}`, "");
+    lines.push(messages.promptBehaviorIntro);
 
+    const axes = getAxesInPriority(spec);
     for (const axis of axes) {
       const level = profile[axis.id];
       if (level === undefined) continue;
@@ -36,16 +30,10 @@ export class BuildPromptService implements BuildPromptUseCase {
       if (!levelDef) continue;
 
       const axisName = lang === "fr" ? axis.nameFr : axis.nameEn;
-      const levelName = lang === "fr" ? levelDef.nameFr : levelDef.nameEn;
-      const description = lang === "fr"
-        ? levelDef.descriptionFr
-        : levelDef.descriptionEn;
-
-      lines.push(`${axisName} (${levelName}):`);
-      if (description) {
-        lines.push(description);
-      }
-      lines.push("");
+      const prompt = lang === "fr" ? levelDef.promptFr : levelDef.promptEn;
+      lines.push(
+        `  - ${axisName} ${level}/10: ${prompt.replaceAll("\n", " ")}`,
+      );
     }
 
     return lines.join("\n");

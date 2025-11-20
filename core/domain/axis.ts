@@ -16,8 +16,10 @@ export interface LevelDefinition {
   readonly level: number;
   readonly nameFr: string;
   readonly nameEn: string;
-  readonly descriptionFr?: string;
-  readonly descriptionEn?: string;
+  readonly descriptionFr: string;
+  readonly descriptionEn: string;
+  readonly promptFr: string;
+  readonly promptEn: string;
 }
 
 export interface Axis {

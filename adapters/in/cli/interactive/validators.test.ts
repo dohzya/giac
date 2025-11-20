@@ -26,6 +26,8 @@ function createTestAxis(): Axis {
         nameEn: "Listen",
         descriptionFr: "Description écouter",
         descriptionEn: "Listen description",
+        promptFr: "Prompt écouter",
+        promptEn: "Listen prompt",
       },
       {
         level: 5,
@@ -33,6 +35,8 @@ function createTestAxis(): Axis {
         nameEn: "Explain",
         descriptionFr: "Description expliquer",
         descriptionEn: "Explain description",
+        promptFr: "Prompt expliquer",
+        promptEn: "Explain prompt",
       },
       {
         level: 10,
@@ -40,6 +44,8 @@ function createTestAxis(): Axis {
         nameEn: "Decide",
         descriptionFr: "Description décider",
         descriptionEn: "Decide description",
+        promptFr: "Prompt décider",
+        promptEn: "Decide prompt",
       },
     ],
   };

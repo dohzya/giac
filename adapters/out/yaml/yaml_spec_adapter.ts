@@ -15,10 +15,12 @@ import { ExplicitCast } from "~/core/common/explicit_cast.ts";
 
 const LevelDefinitionSchema = z.object({
   level: z.int().check(z.nonnegative()),
-  name_fr: z.string(),
-  name_en: z.string(),
-  description_fr: z.optional(z.string()),
-  description_en: z.optional(z.string()),
+  name_fr: z.string().check(z.minLength(1)),
+  name_en: z.string().check(z.minLength(1)),
+  description_fr: z.string().check(z.minLength(1)),
+  description_en: z.string().check(z.minLength(1)),
+  prompt_fr: z.string().check(z.minLength(1)),
+  prompt_en: z.string().check(z.minLength(1)),
 });
 
 const AxisSchema = z.object({
@@ -50,6 +52,8 @@ function mapLevelDefinition(raw: RawLevelDefinition): LevelDefinition {
     nameEn: raw.name_en,
     descriptionFr: raw.description_fr,
     descriptionEn: raw.description_en,
+    promptFr: raw.prompt_fr,
+    promptEn: raw.prompt_en,
   };
 }
 

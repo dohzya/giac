@@ -21,6 +21,8 @@ function createTestAxis(): Axis {
         nameEn: "Level 0",
         descriptionFr: "Description niveau 0",
         descriptionEn: "Level 0 description",
+        promptFr: "Prompt niveau 0",
+        promptEn: "Level 0 prompt",
       },
       {
         level: 5,
@@ -28,6 +30,8 @@ function createTestAxis(): Axis {
         nameEn: "Level 5",
         descriptionFr: "Description niveau 5",
         descriptionEn: "Level 5 description",
+        promptFr: "Prompt niveau 5",
+        promptEn: "Level 5 prompt",
       },
       {
         level: 10,
@@ -35,6 +39,8 @@ function createTestAxis(): Axis {
         nameEn: "Level 10",
         descriptionFr: "Description niveau 10",
         descriptionEn: "Level 10 description",
+        promptFr: "Prompt niveau 10",
+        promptEn: "Level 10 prompt",
       },
     ],
   };

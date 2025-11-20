@@ -31,6 +31,8 @@ const createTestSpec = (): Spec => ({
         nameEn: `Level ${i}`,
         descriptionFr: `Description niveau ${i}`,
         descriptionEn: `Level ${i} description`,
+        promptFr: `Prompt niveau ${i}`,
+        promptEn: `Level ${i} prompt`,
       })),
     },
     [axisId("confrontation")]: {
@@ -47,6 +49,8 @@ const createTestSpec = (): Spec => ({
         nameEn: `Level ${i}`,
         descriptionFr: `Description niveau ${i}`,
         descriptionEn: `Level ${i} description`,
+        promptFr: `Prompt niveau ${i}`,
+        promptEn: `Level ${i} prompt`,
       })),
     },
     [axisId("density")]: {
@@ -63,6 +67,8 @@ const createTestSpec = (): Spec => ({
         nameEn: `Level ${i}`,
         descriptionFr: `Description niveau ${i}`,
         descriptionEn: `Level ${i} description`,
+        promptFr: `Prompt niveau ${i}`,
+        promptEn: `Level ${i} prompt`,
       })),
     },
     [axisId("energy")]: {
@@ -79,6 +85,8 @@ const createTestSpec = (): Spec => ({
         nameEn: `Level ${i}`,
         descriptionFr: `Description niveau ${i}`,
         descriptionEn: `Level ${i} description`,
+        promptFr: `Prompt niveau ${i}`,
+        promptEn: `Level ${i} prompt`,
       })),
     },
     [axisId("register")]: {
@@ -95,6 +103,8 @@ const createTestSpec = (): Spec => ({
         nameEn: `Level ${i}`,
         descriptionFr: `Description niveau ${i}`,
         descriptionEn: `Level ${i} description`,
+        promptFr: `Prompt niveau ${i}`,
+        promptEn: `Level ${i} prompt`,
       })),
     },
   },

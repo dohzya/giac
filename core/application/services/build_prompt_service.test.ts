@@ -38,6 +38,8 @@ function createTestSpec(): Spec {
             nameEn: "Level 5",
             descriptionFr: "Description niveau 5",
             descriptionEn: "Level 5 description",
+            promptFr: "Prompt niveau 5",
+            promptEn: "Level 5 prompt",
           },
         ],
       },
@@ -56,6 +58,8 @@ function createTestSpec(): Spec {
             nameEn: "Level 3",
             descriptionFr: "Description niveau 3",
             descriptionEn: "Level 3 description",
+            promptFr: "Prompt niveau 3",
+            promptEn: "Level 3 prompt",
           },
         ],
       },
@@ -80,11 +84,11 @@ Deno.test("BuildPromptService - execute in French", () => {
   const prompt = service.execute(spec, profile, "fr");
 
   assertEquals(prompt.includes("Fragment FR global"), true);
-  assertEquals(prompt.includes("Profil souhaité :"), true);
-  assertEquals(prompt.includes("Télisme=5"), true);
-  assertEquals(prompt.includes("Confrontation=3"), true);
-  assertEquals(prompt.includes("Description niveau 5"), true);
-  assertEquals(prompt.includes("Description niveau 3"), true);
+  assertEquals(prompt.includes("Instructions relatives au comportement"), true);
+  assertEquals(prompt.includes("Télisme 5/10"), true);
+  assertEquals(prompt.includes("Confrontation 3/10"), true);
+  assertEquals(prompt.includes("Prompt niveau 5"), true);
+  assertEquals(prompt.includes("Prompt niveau 3"), true);
 });
 
 Deno.test("BuildPromptService - execute in English", () => {
@@ -94,25 +98,28 @@ Deno.test("BuildPromptService - execute in English", () => {
   const prompt = service.execute(spec, profile, "en");
 
   assertStringIncludes(prompt, "Global fragment EN");
-  assertStringIncludes(prompt, "Desired profile:");
-  assertStringIncludes(prompt, "Telism=5");
-  assertStringIncludes(prompt, "Confrontation=3");
-  assertStringIncludes(prompt, "Level 5 description");
-  assertStringIncludes(prompt, "Level 3 description");
+  assertStringIncludes(prompt, "Behavior instructions:");
+  assertStringIncludes(prompt, "Telism 5/10");
+  assertStringIncludes(prompt, "Confrontation 3/10");
+  assertStringIncludes(prompt, "Level 5 prompt");
+  assertStringIncludes(prompt, "Level 3 prompt");
 });
 
-Deno.test("BuildPromptService - profile line format", () => {
+Deno.test("BuildPromptService - instruction lines format", () => {
   const service = new BuildPromptService();
   const spec = createTestSpec();
   const profile = createTestProfile();
   const prompt = service.execute(spec, profile, "fr");
 
   const lines = prompt.split("\n");
-  const profileLine =
-    lines.find((line) => line.startsWith("Profil souhaité :")) || "";
-  assertNotStrictEquals(profileLine, "");
-  assertStringIncludes(profileLine, "Télisme=5");
-  assertStringIncludes(profileLine, "Confrontation=3");
+  const telismeInstruction =
+    lines.find((line) => line.includes("Télisme 5/10")) || "";
+  const confrontationInstruction =
+    lines.find((line) => line.includes("Confrontation 3/10")) || "";
+  assertNotStrictEquals(telismeInstruction, "");
+  assertNotStrictEquals(confrontationInstruction, "");
+  assertStringIncludes(telismeInstruction, "Prompt niveau 5");
+  assertStringIncludes(confrontationInstruction, "Prompt niveau 3");
 });
 
 Deno.test("BuildPromptService - handles missing axis gracefully", () => {
@@ -139,6 +146,8 @@ Deno.test("BuildPromptService - handles missing axis gracefully", () => {
             nameEn: "Level 5",
             descriptionFr: "Description niveau 5",
             descriptionEn: "Level 5 description",
+            promptFr: "Prompt niveau 5",
+            promptEn: "Level 5 prompt",
           },
         ],
       },
@@ -176,6 +185,8 @@ Deno.test("BuildPromptService - handles missing level gracefully", () => {
             nameEn: "Level 3",
             descriptionFr: "Description niveau 3",
             descriptionEn: "Level 3 description",
+            promptFr: "Prompt niveau 3",
+            promptEn: "Level 3 prompt",
           },
         ],
       },
