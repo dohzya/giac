@@ -4,7 +4,7 @@
  */
 
 import { parse } from "@std/yaml";
-import * as z from "zod/mini";
+import * as z from "@zod/zod/mini";
 import type { SpecReaderPort } from "~/core/application/ports/out/spec_reader_port.ts";
 import type { Axis, AxisId, LevelDefinition, Spec } from "~/core/domain/mod.ts";
 import { axisId } from "~/core/domain/axis.ts";
