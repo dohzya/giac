@@ -44,7 +44,7 @@ async function promptForAxis(
   const level = validateLevelInput(axis, input);
 
   if (level === undefined) {
-    ui.error(`${msg.errorInvalidLevelInput}: "${input}"`);
+    ui.error(`${msg.errorInvalidLevelInput} "${input}"`);
     return undefined;
   }
 

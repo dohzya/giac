@@ -9,6 +9,7 @@ import type { Prompt } from "~/core/domain/prompt.ts";
 import type { Spec } from "~/core/domain/spec.ts";
 import { getAxesInPriority } from "~/core/domain/spec.ts";
 import { getLevel } from "~/core/domain/axis.ts";
+import { getMessages } from "~/adapters/in/cli/messages.ts";
 
 export class BuildPromptService implements BuildPromptUseCase {
   execute(spec: Spec, profile: Profile, lang: Language): Prompt {
@@ -18,6 +19,7 @@ export class BuildPromptService implements BuildPromptUseCase {
       : spec.promptFragmentEn;
     lines.push(header, "");
 
+    const messages = getMessages(lang);
     const axes = getAxesInPriority(spec);
     const profileParts: string[] = [];
     for (const axis of axes) {
@@ -25,7 +27,7 @@ export class BuildPromptService implements BuildPromptUseCase {
       const level = profile[axis.id];
       profileParts.push(`${axisName}=${level}`);
     }
-    lines.push(`Profil: ${profileParts.join(" ")}`, "");
+    lines.push(`${messages.promptLabelProfile} ${profileParts.join(" ")}`, "");
 
     for (const axis of axes) {
       const level = profile[axis.id];
@@ -33,10 +35,17 @@ export class BuildPromptService implements BuildPromptUseCase {
       const levelDef = getLevel(axis, level);
       if (!levelDef) continue;
 
-      const fragment = lang === "fr"
-        ? levelDef.promptFragmentFr
-        : levelDef.promptFragmentEn;
-      lines.push(fragment);
+      const axisName = lang === "fr" ? axis.nameFr : axis.nameEn;
+      const levelName = lang === "fr" ? levelDef.nameFr : levelDef.nameEn;
+      const description = lang === "fr"
+        ? levelDef.descriptionFr
+        : levelDef.descriptionEn;
+
+      lines.push(`${axisName} (${levelName}):`);
+      if (description) {
+        lines.push(description);
+      }
+      lines.push("");
     }
 
     return lines.join("\n");

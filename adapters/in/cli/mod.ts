@@ -32,7 +32,7 @@ export class CliAdapterImpl implements CliAdapter {
       await executeBuildPrompt(this.getSpec, this.buildPrompt, args.slice(1));
     } else {
       const msg = getMessages("fr");
-      ui.error(`${msg.errorUnknownCommand}: ${command}`);
+      ui.error(`${msg.errorUnknownCommand}${command}`);
       ui.info(msg.usageHelp);
       ui.info(`  ${msg.commandHelpSpec}`);
       ui.info(`  ${msg.commandHelpBuild}`);

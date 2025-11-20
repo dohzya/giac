@@ -30,7 +30,7 @@ export async function executeGetSpec(
       const axis = resolveAxis(spec, axisInput);
       if (!axis) {
         const msg = getMessages(lang);
-        ui.error(`${msg.errorAxisNotFound}: ${axisInput}`);
+        ui.error(`${msg.errorAxisNotFound} ${axisInput}`);
         ui.info(msg.helpAxisIdentifier);
         Deno.exit(1);
       }
@@ -50,11 +50,13 @@ export async function executeGetSpec(
 
       for (const levelDef of axis.levels) {
         const levelName = lang === "fr" ? levelDef.nameFr : levelDef.nameEn;
+        const description = lang === "fr"
+          ? levelDef.descriptionFr
+          : levelDef.descriptionEn;
         ui.info(`  ${levelDef.level}: ${levelName}`);
-        const fragment = lang === "fr"
-          ? levelDef.promptFragmentFr
-          : levelDef.promptFragmentEn;
-        ui.dim(`    ${fragment}`);
+        if (description) {
+          ui.dim(`    ${description}`);
+        }
       }
     } else {
       const msg = getMessages(lang);
@@ -76,7 +78,7 @@ export async function executeGetSpec(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     const msg = getMessages(lang);
-    ui.error(`${msg.errorRetrievingSpec}: ${message}`);
+    ui.error(`${msg.errorRetrievingSpec} ${message}`);
     Deno.exit(1);
   }
 }

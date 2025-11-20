@@ -141,7 +141,7 @@ Flat message catalog in `adapters/in/cli/messages.ts`:
 
 ```ts
 const msg = getMessages(lang);
-ui.error(`${msg.errorUnknownCommand}: ${command}`);
+ui.error(`${msg.errorUnknownCommand}${command}`);
 ```
 
 All user-visible strings have French & English variants. Domain terms appear in

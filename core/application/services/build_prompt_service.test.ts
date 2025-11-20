@@ -2,7 +2,13 @@
  * Tests for BuildPromptService.
  */
 
-import { assertEquals, assertExists } from "@std/assert";
+import {
+  assertEquals,
+  assertExists,
+  assertNotMatch,
+  assertNotStrictEquals,
+  assertStringIncludes,
+} from "@std/assert";
 import { BuildPromptService } from "./build_prompt_service.ts";
 import type { Spec } from "~/core/domain/spec.ts";
 import type { Profile } from "~/core/domain/profile.ts";
@@ -14,8 +20,8 @@ function createTestSpec(): Spec {
   return {
     descriptionFr: "Description FR",
     descriptionEn: "Description EN",
-    promptFragmentFr: "Fragment intro FR",
-    promptFragmentEn: "Fragment intro EN",
+    promptFragmentFr: "Fragment FR global",
+    promptFragmentEn: "Global fragment EN",
     axes: {
       [telismeId]: {
         id: telismeId,
@@ -25,15 +31,13 @@ function createTestSpec(): Spec {
         nameEn: "Telism",
         descriptionFr: "Description FR",
         descriptionEn: "Description EN",
-        promptFragmentFr: "Fragment axe FR",
-        promptFragmentEn: "Fragment axis EN",
         levels: [
           {
             level: 5,
             nameFr: "Niveau 5",
             nameEn: "Level 5",
-            promptFragmentFr: "Fragment niveau 5 FR",
-            promptFragmentEn: "Fragment level 5 EN",
+            descriptionFr: "Description niveau 5",
+            descriptionEn: "Level 5 description",
           },
         ],
       },
@@ -45,15 +49,13 @@ function createTestSpec(): Spec {
         nameEn: "Confrontation",
         descriptionFr: "Description FR",
         descriptionEn: "Description EN",
-        promptFragmentFr: "Fragment axe FR",
-        promptFragmentEn: "Fragment axis EN",
         levels: [
           {
             level: 3,
             nameFr: "Niveau 3",
             nameEn: "Level 3",
-            promptFragmentFr: "Fragment niveau 3 FR",
-            promptFragmentEn: "Fragment level 3 EN",
+            descriptionFr: "Description niveau 3",
+            descriptionEn: "Level 3 description",
           },
         ],
       },
@@ -77,12 +79,12 @@ Deno.test("BuildPromptService - execute in French", () => {
   const profile = createTestProfile();
   const prompt = service.execute(spec, profile, "fr");
 
-  assertEquals(prompt.includes("Fragment intro FR"), true);
-  assertEquals(prompt.includes("Profil:"), true);
+  assertEquals(prompt.includes("Fragment FR global"), true);
+  assertEquals(prompt.includes("Profil souhaité :"), true);
   assertEquals(prompt.includes("Télisme=5"), true);
   assertEquals(prompt.includes("Confrontation=3"), true);
-  assertEquals(prompt.includes("Fragment niveau 5 FR"), true);
-  assertEquals(prompt.includes("Fragment niveau 3 FR"), true);
+  assertEquals(prompt.includes("Description niveau 5"), true);
+  assertEquals(prompt.includes("Description niveau 3"), true);
 });
 
 Deno.test("BuildPromptService - execute in English", () => {
@@ -91,12 +93,12 @@ Deno.test("BuildPromptService - execute in English", () => {
   const profile = createTestProfile();
   const prompt = service.execute(spec, profile, "en");
 
-  assertEquals(prompt.includes("Fragment intro EN"), true);
-  assertEquals(prompt.includes("Profil:"), true);
-  assertEquals(prompt.includes("Telism=5"), true);
-  assertEquals(prompt.includes("Confrontation=3"), true);
-  assertEquals(prompt.includes("Fragment level 5 EN"), true);
-  assertEquals(prompt.includes("Fragment level 3 EN"), true);
+  assertStringIncludes(prompt, "Global fragment EN");
+  assertStringIncludes(prompt, "Desired profile:");
+  assertStringIncludes(prompt, "Telism=5");
+  assertStringIncludes(prompt, "Confrontation=3");
+  assertStringIncludes(prompt, "Level 5 description");
+  assertStringIncludes(prompt, "Level 3 description");
 });
 
 Deno.test("BuildPromptService - profile line format", () => {
@@ -106,10 +108,11 @@ Deno.test("BuildPromptService - profile line format", () => {
   const prompt = service.execute(spec, profile, "fr");
 
   const lines = prompt.split("\n");
-  const profileLine = lines.find((line) => line.startsWith("Profil:"));
-  assertExists(profileLine);
-  assertEquals(profileLine!.includes("Télisme=5"), true);
-  assertEquals(profileLine!.includes("Confrontation=3"), true);
+  const profileLine =
+    lines.find((line) => line.startsWith("Profil souhaité :")) || "";
+  assertNotStrictEquals(profileLine, "");
+  assertStringIncludes(profileLine, "Télisme=5");
+  assertStringIncludes(profileLine, "Confrontation=3");
 });
 
 Deno.test("BuildPromptService - handles missing axis gracefully", () => {
@@ -118,8 +121,8 @@ Deno.test("BuildPromptService - handles missing axis gracefully", () => {
   const incompleteSpec: Spec = {
     descriptionFr: "Description FR",
     descriptionEn: "Description EN",
-    promptFragmentFr: "Fragment intro FR",
-    promptFragmentEn: "Fragment intro EN",
+    promptFragmentFr: "Fragment FR global",
+    promptFragmentEn: "Global fragment EN",
     axes: {
       [axisId("telisme")]: {
         id: axisId("telisme"),
@@ -129,15 +132,13 @@ Deno.test("BuildPromptService - handles missing axis gracefully", () => {
         nameEn: "Telism",
         descriptionFr: "Description FR",
         descriptionEn: "Description EN",
-        promptFragmentFr: "Fragment axe FR",
-        promptFragmentEn: "Fragment axis EN",
         levels: [
           {
             level: 5,
             nameFr: "Niveau 5",
             nameEn: "Level 5",
-            promptFragmentFr: "Fragment niveau 5 FR",
-            promptFragmentEn: "Fragment level 5 EN",
+            descriptionFr: "Description niveau 5",
+            descriptionEn: "Level 5 description",
           },
         ],
       },
@@ -148,7 +149,7 @@ Deno.test("BuildPromptService - handles missing axis gracefully", () => {
   // Should not throw, just skip missing axes
   const prompt = service.execute(incompleteSpec, profile, "fr");
   assertExists(prompt);
-  assertEquals(prompt.includes("Fragment intro FR"), true);
+  assertStringIncludes(prompt, "Fragment FR global");
 });
 
 Deno.test("BuildPromptService - handles missing level gracefully", () => {
@@ -157,8 +158,8 @@ Deno.test("BuildPromptService - handles missing level gracefully", () => {
   const specWithMissingLevel: Spec = {
     descriptionFr: "Description FR",
     descriptionEn: "Description EN",
-    promptFragmentFr: "Fragment intro FR",
-    promptFragmentEn: "Fragment intro EN",
+    promptFragmentFr: "Fragment FR global",
+    promptFragmentEn: "Global fragment EN",
     axes: {
       [axisId("telisme")]: {
         id: axisId("telisme"),
@@ -168,15 +169,13 @@ Deno.test("BuildPromptService - handles missing level gracefully", () => {
         nameEn: "Telism",
         descriptionFr: "Description FR",
         descriptionEn: "Description EN",
-        promptFragmentFr: "Fragment axe FR",
-        promptFragmentEn: "Fragment axis EN",
         levels: [
           {
             level: 3,
             nameFr: "Niveau 3",
             nameEn: "Level 3",
-            promptFragmentFr: "Fragment niveau 3 FR",
-            promptFragmentEn: "Fragment level 3 EN",
+            descriptionFr: "Description niveau 3",
+            descriptionEn: "Level 3 description",
           },
         ],
       },
@@ -187,6 +186,6 @@ Deno.test("BuildPromptService - handles missing level gracefully", () => {
   // Should not throw, just skip missing level
   const prompt = service.execute(specWithMissingLevel, profile, "fr");
   assertExists(prompt);
-  assertEquals(prompt.includes("Fragment intro FR"), true);
-  assertEquals(prompt.includes("Fragment niveau 3 FR"), false); // Level 5 not found, so fragment skipped
+  assertStringIncludes(prompt, "Fragment FR global");
+  assertNotMatch(prompt, /Description niveau 3/); // Level 5 not found, so description skipped
 });

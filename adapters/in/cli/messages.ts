@@ -36,6 +36,7 @@ export interface Messages {
   readonly labelDescription: string;
   readonly labelLevels: string;
   readonly labelProfile: string;
+  readonly promptLabelProfile: string;
 
   // Titles
   readonly titleSpecification: string;
@@ -53,12 +54,12 @@ export function getMessages(lang: Language): Messages {
   if (lang === "fr") {
     return {
       // Errors
-      errorUnknownCommand: "Commande inconnue",
+      errorUnknownCommand: "Commande inconnue:",
       errorInvalidLevelInput:
-        "Valeur invalide. Veuillez entrer un nombre (0-10) ou un nom de niveau",
-      errorGeneratingPrompt: "Erreur lors de la génération du prompt",
-      errorAxisNotFound: "Axe introuvable",
-      errorRetrievingSpec: "Erreur lors de la récupération de la spec",
+        "Valeur invalide. Veuillez entrer un nombre (0-10) ou un nom de niveau :",
+      errorGeneratingPrompt: "Erreur lors de la génération du prompt :",
+      errorAxisNotFound: "Axe introuvable :",
+      errorRetrievingSpec: "Erreur lors de la récupération de la spec :",
 
       // Help & Usage
       usageHelp: "Usage: giac [spec|build] [options]",
@@ -76,10 +77,11 @@ export function getMessages(lang: Language): Messages {
         "Certains axes ne sont pas spécifiés. Mode interactif activé.",
 
       // Labels
-      labelInitials: "Initiales:",
-      labelDescription: "Description:",
-      labelLevels: "Niveaux:",
-      labelProfile: "Profil:",
+      labelInitials: "Initiales :",
+      labelDescription: "Description :",
+      labelLevels: "Niveaux :",
+      labelProfile: "Profil :",
+      promptLabelProfile: "Profil souhaité :",
 
       // Titles
       titleSpecification: "Spécification GIAC",
@@ -93,10 +95,10 @@ export function getMessages(lang: Language): Messages {
     // Errors
     errorUnknownCommand: "Unknown command",
     errorInvalidLevelInput:
-      "Invalid value. Please enter a number (0-10) or a level name",
-    errorGeneratingPrompt: "Error generating prompt",
-    errorAxisNotFound: "Axis not found",
-    errorRetrievingSpec: "Error retrieving spec",
+      "Invalid value. Please enter a number (0-10) or a level name:",
+    errorGeneratingPrompt: "Error generating prompt:",
+    errorAxisNotFound: "Axis not found:",
+    errorRetrievingSpec: "Error retrieving spec:",
 
     // Help & Usage
     usageHelp: "Usage: giac [spec|build] [options]",
@@ -117,6 +119,7 @@ export function getMessages(lang: Language): Messages {
     labelDescription: "Description:",
     labelLevels: "Levels:",
     labelProfile: "Profile:",
+    promptLabelProfile: "Desired profile:",
 
     // Titles
     titleSpecification: "GIAC Specification",

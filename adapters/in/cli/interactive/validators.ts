@@ -37,7 +37,17 @@ export function formatAvailableLevels(axis: Axis, lang: "fr" | "en"): string {
   const lines: string[] = [];
   for (const levelDef of axis.levels) {
     const name = lang === "fr" ? levelDef.nameFr : levelDef.nameEn;
+    const description = lang === "fr"
+      ? levelDef.descriptionFr
+      : levelDef.descriptionEn;
     lines.push(`  ${levelDef.level}: ${name}`);
+    if (description && description.trim() !== "") {
+      // Indent the description and add it below the level name
+      const indentedDesc = description.split("\n")
+        .map((line) => `      ${line}`)
+        .join("\n");
+      lines.push(indentedDesc);
+    }
   }
   return lines.join("\n");
 }

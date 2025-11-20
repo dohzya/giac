@@ -9,19 +9,19 @@ Deno.test("getMessages - returns French messages", () => {
   const messages = getMessages("fr");
 
   assertExists(messages);
-  assertEquals(messages.errorUnknownCommand, "Commande inconnue");
+  assertEquals(messages.errorUnknownCommand, "Commande inconnue:");
   assertEquals(
     messages.errorInvalidLevelInput,
-    "Valeur invalide. Veuillez entrer un nombre (0-10) ou un nom de niveau",
+    "Valeur invalide. Veuillez entrer un nombre (0-10) ou un nom de niveau :",
   );
   assertEquals(
     messages.errorGeneratingPrompt,
-    "Erreur lors de la génération du prompt",
+    "Erreur lors de la génération du prompt :",
   );
-  assertEquals(messages.errorAxisNotFound, "Axe introuvable");
+  assertEquals(messages.errorAxisNotFound, "Axe introuvable :");
   assertEquals(
     messages.errorRetrievingSpec,
-    "Erreur lors de la récupération de la spec",
+    "Erreur lors de la récupération de la spec :",
   );
   assertEquals(messages.usageHelp, "Usage: giac [spec|build] [options]");
   assertEquals(messages.commandHelpSpec, "spec - Affiche la spécification");
@@ -38,16 +38,16 @@ Deno.test("getMessages - returns English messages", () => {
   assertEquals(messages.errorUnknownCommand, "Unknown command");
   assertEquals(
     messages.errorInvalidLevelInput,
-    "Invalid value. Please enter a number (0-10) or a level name",
+    "Invalid value. Please enter a number (0-10) or a level name:",
   );
   assertEquals(
     messages.errorGeneratingPrompt,
-    "Error generating prompt",
+    "Error generating prompt:",
   );
-  assertEquals(messages.errorAxisNotFound, "Axis not found");
+  assertEquals(messages.errorAxisNotFound, "Axis not found:");
   assertEquals(
     messages.errorRetrievingSpec,
-    "Error retrieving spec",
+    "Error retrieving spec:",
   );
   assertEquals(messages.usageHelp, "Usage: giac [spec|build] [options]");
   assertEquals(messages.commandHelpSpec, "spec - Display specification");

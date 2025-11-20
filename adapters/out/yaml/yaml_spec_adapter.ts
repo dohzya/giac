@@ -17,8 +17,8 @@ const LevelDefinitionSchema = z.object({
   level: z.int().check(z.nonnegative()),
   name_fr: z.string(),
   name_en: z.string(),
-  prompt_fragment_fr: z.string(),
-  prompt_fragment_en: z.string(),
+  description_fr: z.optional(z.string()),
+  description_en: z.optional(z.string()),
 });
 
 const AxisSchema = z.object({
@@ -28,8 +28,6 @@ const AxisSchema = z.object({
   name_en: z.string(),
   description_fr: z.string(),
   description_en: z.string(),
-  prompt_fragment_fr: z.string(),
-  prompt_fragment_en: z.string(),
   levels: z.array(LevelDefinitionSchema),
 });
 
@@ -50,8 +48,8 @@ function mapLevelDefinition(raw: RawLevelDefinition): LevelDefinition {
     level: raw.level, // Already narrowed to Level type by Zod schema
     nameFr: raw.name_fr,
     nameEn: raw.name_en,
-    promptFragmentFr: raw.prompt_fragment_fr,
-    promptFragmentEn: raw.prompt_fragment_en,
+    descriptionFr: raw.description_fr,
+    descriptionEn: raw.description_en,
   };
 }
 
@@ -64,8 +62,6 @@ function mapAxis(id: string, raw: RawAxis): Axis {
     nameEn: raw.name_en,
     descriptionFr: raw.description_fr,
     descriptionEn: raw.description_en,
-    promptFragmentFr: raw.prompt_fragment_fr,
-    promptFragmentEn: raw.prompt_fragment_en,
     levels: raw.levels.map(mapLevelDefinition),
   };
 }

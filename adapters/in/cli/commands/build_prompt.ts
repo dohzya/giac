@@ -47,7 +47,7 @@ export async function executeBuildPrompt(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     const msg = getMessages("fr");
-    ui.error(`${msg.errorGeneratingPrompt}: ${message}`);
+    ui.error(`${msg.errorGeneratingPrompt}${message}`);
     Deno.exit(1);
   }
 }
