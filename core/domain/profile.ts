@@ -2,10 +2,10 @@
  * Domain model for a profile: mapping of axes to their selected levels.
  */
 
-import type { AxisId } from "./axis.ts";
+import type { AxisId, Level } from "./axis.ts";
 
-export type Profile = Record<AxisId, number>;
-export type PartialProfile = Record<AxisId, number | undefined>;
+export type Profile = Record<AxisId, Level>;
+export type PartialProfile = Record<AxisId, Level | undefined>;
 
 /**
  * Create a complete profile from a partial profile, filling missing values with defaults.

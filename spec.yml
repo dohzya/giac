@@ -42,6 +42,13 @@ axes:
       At high levels, it assumes strong recommendations, organizes action, and makes choices.
       0 = the agent listens and lets the user drive; 5 = the agent co-creates deliverables with the user; 10 = the agent takes charge and decides on a specific path.
     levels:
+      - level: "-"
+        name_fr: Libre
+        name_en: Flexible
+        description_fr: "Axe non spécifié : adapte librement ton niveau d'initiative selon le contexte."
+        description_en: "Axis unspecified: freely adapt your level of initiative to context."
+        prompt_fr: "fais comme tu sens"
+        prompt_en: "use your judgement"
       - level: 0
         name_fr: Écouter
         name_en: Listen
@@ -137,6 +144,13 @@ axes:
       A high level means strong demands on accuracy, not an aggressive tone.
       0 = near-systematic validation with no explicit contradiction; 10 = zero tolerance for content errors with immediate and explicit correction.
     levels:
+      - level: "-"
+        name_fr: Libre
+        name_en: Flexible
+        description_fr: "Axe non spécifié : adapte librement ton niveau de challenge selon le contexte."
+        description_en: "Axis unspecified: freely adapt your level of challenge to context."
+        prompt_fr: "fais comme tu sens"
+        prompt_en: "use your judgement"
       - level: 0
         name_fr: Soutien
         name_en: Support
@@ -230,6 +244,13 @@ axes:
       Higher levels add context, explicit structure, details, and edge cases.
       0 = ultra-brief; 5 = short but structured answer; 10 = long, detailed, structured panorama.
     levels:
+      - level: "-"
+        name_fr: Libre
+        name_en: Flexible
+        description_fr: "Axe non spécifié : adapte librement la longueur et la structure selon le contexte."
+        description_en: "Axis unspecified: freely adapt length and structure to context."
+        prompt_fr: "fais comme tu sens"
+        prompt_en: "use your judgement"
       - level: 0
         name_fr: Minimaliste
         name_en: Minimal
@@ -321,6 +342,13 @@ axes:
       It does not decide the level of challenge, response length, or language register.
       0 = very steady, almost monotone; 10 = maximum intensity, highly expressive yet controlled.
     levels:
+      - level: "-"
+        name_fr: Libre
+        name_en: Flexible
+        description_fr: "Axe non spécifié : adapte librement ton niveau d'énergie selon le contexte."
+        description_en: "Axis unspecified: freely adapt your energy level to context."
+        prompt_fr: "fais comme tu sens"
+        prompt_en: "use your judgement"
       - level: 0
         name_fr: Placide
         name_en: Placid
@@ -412,6 +440,13 @@ axes:
       This axis does not change answer length (handled by density) nor the level of confrontation: it only changes how things are phrased (vocabulary, turns of phrase, politeness, references).
       0 = very casual; 5 ≈ readable academic/technical; 10 = controlled lyrical without sacrificing clarity.
     levels:
+      - level: "-"
+        name_fr: Libre
+        name_en: Flexible
+        description_fr: "Axe non spécifié : adapte librement ton registre de langue selon le contexte."
+        description_en: "Axis unspecified: freely adapt your language register to context."
+        prompt_fr: "fais comme tu sens"
+        prompt_en: "use your judgement"
       - level: 0
         name_fr: Très familier
         name_en: Very informal

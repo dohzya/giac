@@ -8,7 +8,8 @@ import type { Profile } from "~/core/domain/profile.ts";
 import type { Prompt } from "~/core/domain/prompt.ts";
 import type { Spec } from "~/core/domain/spec.ts";
 import { getAxesInPriority } from "~/core/domain/spec.ts";
-import { getLevel } from "~/core/domain/axis.ts";
+import { getLevel, UnspecifiedLevel } from "~/core/domain/axis.ts";
+import type { Axis } from "~/core/domain/axis.ts";
 import { getMessages } from "~/adapters/in/cli/messages.ts";
 
 export class BuildPromptService implements BuildPromptUseCase {
@@ -24,18 +25,29 @@ export class BuildPromptService implements BuildPromptUseCase {
 
     const axes = getAxesInPriority(spec);
     for (const axis of axes) {
-      const level = profile[axis.id];
-      if (level === undefined) continue;
-      const levelDef = getLevel(axis, level);
-      if (!levelDef) continue;
-
-      const axisName = lang === "fr" ? axis.nameFr : axis.nameEn;
-      const prompt = lang === "fr" ? levelDef.promptFr : levelDef.promptEn;
-      lines.push(
-        `  - ${axisName} ${level}/10: ${prompt.replaceAll("\n", " ")}`,
-      );
+      const line = this.buildAxisLine(axis, profile, lang);
+      if (line) lines.push(line);
     }
 
     return lines.join("\n");
+  }
+
+  private buildAxisLine(
+    axis: Axis,
+    profile: Profile,
+    lang: Language,
+  ): string | undefined {
+    const rawLevel = profile[axis.id];
+    const levelDef = rawLevel === undefined
+      ? getLevel(axis, UnspecifiedLevel)
+      : getLevel(axis, rawLevel);
+    if (!levelDef) return undefined;
+    const axisName = lang === "fr" ? axis.nameFr : axis.nameEn;
+    const prompt = lang === "fr" ? levelDef.promptFr : levelDef.promptEn;
+    const normalizedPrompt = prompt.replaceAll("\n", " ");
+    if (rawLevel === undefined || levelDef.level === UnspecifiedLevel) {
+      return `  - ${axisName} ${UnspecifiedLevel}: ${normalizedPrompt}`;
+    }
+    return `  - ${axisName} ${rawLevel}/10: ${normalizedPrompt}`;
   }
 }

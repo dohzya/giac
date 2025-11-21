@@ -7,6 +7,7 @@ import type { PartialProfile } from "~/core/domain/profile.ts";
 import type { Language } from "~/core/application/ports/in/build_prompt.ts";
 import type { Spec } from "~/core/domain/spec.ts";
 import { resolveLevel } from "~/core/domain/spec.ts";
+import { UnspecifiedLevel } from "~/core/domain/axis.ts";
 import { ExplicitCast } from "~/core/common/explicit_cast.ts";
 
 /**
@@ -22,7 +23,9 @@ function parseLongFlag(
   const directValue = match[2];
   if (!key) return undefined;
   if (directValue !== undefined) return [key, directValue, 1];
-  if (nextArg && !nextArg.startsWith("-")) return [key, nextArg, 2];
+  if (nextArg && (nextArg === UnspecifiedLevel || !nextArg.startsWith("-"))) {
+    return [key, nextArg, 2];
+  }
   return [key, true, 1];
 }
 
@@ -39,7 +42,9 @@ function parseShortFlag(
   const directValue = match[2];
   if (!key) return undefined;
   if (directValue !== undefined) return [key, directValue, 1];
-  if (nextArg && !nextArg.startsWith("-")) return [key, nextArg, 2];
+  if (nextArg && (nextArg === UnspecifiedLevel || !nextArg.startsWith("-"))) {
+    return [key, nextArg, 2];
+  }
   return [key, true, 1];
 }
 
@@ -104,9 +109,9 @@ function applyEnv(
   if (envVal === undefined) return false;
   const level = resolveLevel(axis, envVal);
   if (level === undefined) return false;
-  ExplicitCast.from<PartialProfile>(profile).cast<
-    Record<string, number>
-  >()[id] = level;
+  const mutableProfile = ExplicitCast.from<PartialProfile>(profile)
+    .cast<Record<string, typeof level>>();
+  mutableProfile[id] = level;
   return true;
 }
 
@@ -136,9 +141,9 @@ function applyFlags(
     if (raw === undefined) continue;
     const level = resolveLevel(axis, String(raw));
     if (level !== undefined) {
-      ExplicitCast.from<PartialProfile>(profile).cast<
-        Record<string, number>
-      >()[id] = level;
+      const mutableProfile = ExplicitCast.from<PartialProfile>(profile)
+        .cast<Record<string, typeof level>>();
+      mutableProfile[id] = level;
       break;
     }
   }

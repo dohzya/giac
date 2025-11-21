@@ -12,7 +12,7 @@ import {
 import { BuildPromptService } from "./build_prompt_service.ts";
 import type { Spec } from "~/core/domain/spec.ts";
 import type { Profile } from "~/core/domain/profile.ts";
-import { axisId } from "~/core/domain/axis.ts";
+import { axisId, UnspecifiedLevel } from "~/core/domain/axis.ts";
 
 function createTestSpec(): Spec {
   const telismeId = axisId("telisme");
@@ -199,4 +199,55 @@ Deno.test("BuildPromptService - handles missing level gracefully", () => {
   assertExists(prompt);
   assertStringIncludes(prompt, "Fragment FR global");
   assertNotMatch(prompt, /Description niveau 3/); // Level 5 not found, so description skipped
+});
+
+Deno.test("BuildPromptService - uses '-' fallback when axis unspecified", () => {
+  const service = new BuildPromptService();
+  const spec: Spec = {
+    descriptionFr: "Description FR",
+    descriptionEn: "Description EN",
+    promptFragmentFr: "Fragment FR global",
+    promptFragmentEn: "Global fragment EN",
+    axes: {
+      [axisId("densite")]: {
+        id: axisId("densite"),
+        priority: 1,
+        initials: ["D"],
+        nameFr: "Densité",
+        nameEn: "Density",
+        descriptionFr: "Desc FR",
+        descriptionEn: "Desc EN",
+        levels: [
+          {
+            level: UnspecifiedLevel,
+            nameFr: "Libre",
+            nameEn: "Flexible",
+            descriptionFr: "Non spécifié, fais comme tu sens",
+            descriptionEn: "Unspecified, use best judgement",
+            promptFr: "fais comme tu sens",
+            promptEn: "use your judgement",
+          },
+          {
+            level: 5,
+            nameFr: "Intermédiaire",
+            nameEn: "Mid",
+            descriptionFr: "Desc",
+            descriptionEn: "Desc",
+            promptFr: "Prompt mid",
+            promptEn: "Prompt mid",
+          },
+        ],
+      },
+    },
+  };
+  // Profile does NOT specify densite axis -> should fallback to '-'
+  const profile: Profile = {
+    [axisId("telisme")]: 5,
+    [axisId("confrontation")]: 3,
+    [axisId("density")]: 0,
+    [axisId("energy")]: 0,
+    [axisId("register")]: 0,
+  };
+  const prompt = service.execute(spec, profile, "fr");
+  assertStringIncludes(prompt, "Densité -: fais comme tu sens");
 });

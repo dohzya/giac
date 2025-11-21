@@ -12,8 +12,13 @@ export function axisId(value: string): AxisId {
 
 // Levels are numeric and spec-driven (no fixed upper bound).
 
+export const UnspecifiedLevel = "-" as const;
+export type UnspecifiedLevel = typeof UnspecifiedLevel;
+
+export type Level = number | UnspecifiedLevel;
+
 export interface LevelDefinition {
-  readonly level: number;
+  readonly level: Level;
   readonly nameFr: string;
   readonly nameEn: string;
   readonly descriptionFr: string;
@@ -38,7 +43,7 @@ export interface Axis {
  */
 export function getLevel(
   axis: Axis,
-  level: number,
+  level: Level,
 ): LevelDefinition | undefined {
   return axis.levels.find((l) => l.level === level);
 }
@@ -46,6 +51,6 @@ export function getLevel(
 /**
  * Check if a value is a valid level (0-10).
  */
-export function isValidLevel(axis: Axis, value: number): boolean {
+export function isValidLevel(axis: Axis, value: Level): boolean {
   return axis.levels.some((l) => l.level === value);
 }

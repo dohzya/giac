@@ -7,14 +7,14 @@ import { parse } from "@std/yaml";
 import * as z from "@zod/zod/mini";
 import type { SpecReaderPort } from "~/core/application/ports/out/spec_reader_port.ts";
 import type { Axis, AxisId, LevelDefinition, Spec } from "~/core/domain/mod.ts";
-import { axisId } from "~/core/domain/axis.ts";
+import { axisId, UnspecifiedLevel } from "~/core/domain/axis.ts";
 import { SpecValidationError } from "~/core/domain/errors.ts";
 import { ExplicitCast } from "~/core/common/explicit_cast.ts";
 
 // No fixed counts: spec drives axes and levels. Only enforce unique priorities.
 
 const LevelDefinitionSchema = z.object({
-  level: z.int().check(z.nonnegative()),
+  level: z.union([z.int().check(z.nonnegative()), z.literal(UnspecifiedLevel)]),
   name_fr: z.string().check(z.minLength(1)),
   name_en: z.string().check(z.minLength(1)),
   description_fr: z.string().check(z.minLength(1)),

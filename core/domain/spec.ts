@@ -3,7 +3,8 @@
  * Axes are stored in a record keyed by AxisId (spec-driven).
  */
 
-import type { Axis, AxisId } from "./axis.ts";
+import type { Axis, AxisId, Level } from "./axis.ts";
+import { UnspecifiedLevel } from "./axis.ts";
 
 export interface Spec {
   readonly descriptionFr: string;
@@ -39,12 +40,12 @@ export function resolveAxis(spec: Spec, input: string): Axis | undefined {
 }
 
 /**
- * Resolve a level from various inputs (number, level name FR/EN).
+ * Resolve a level from various inputs (number, level name FR/EN, or UnspecifiedLevel).
  */
 export function resolveLevel(
   axis: Axis,
   input: string | number,
-): number | undefined {
+): Level | undefined {
   if (typeof input === "number") {
     if (Number.isInteger(input) && axis.levels.some((l) => l.level === input)) {
       return input;
@@ -53,6 +54,15 @@ export function resolveLevel(
   }
 
   const normalized = input.toLowerCase().trim();
+
+  // Check for UnspecifiedLevel sentinel
+  if (normalized === UnspecifiedLevel) {
+    if (axis.levels.some((l) => l.level === UnspecifiedLevel)) {
+      return UnspecifiedLevel;
+    }
+    return undefined;
+  }
+
   const num = Number.parseInt(normalized, 10);
   if (
     !Number.isNaN(num) &&
@@ -65,12 +75,14 @@ export function resolveLevel(
   const byNameFr = axis.levels.find((l) =>
     l.nameFr.toLowerCase() === normalized
   );
-  if (byNameFr) return byNameFr.level;
+  if (byNameFr && typeof byNameFr.level === "number") return byNameFr.level;
+  if (byNameFr && byNameFr.level === UnspecifiedLevel) return UnspecifiedLevel;
 
   const byNameEn = axis.levels.find((l) =>
     l.nameEn.toLowerCase() === normalized
   );
-  if (byNameEn) return byNameEn.level;
+  if (byNameEn && typeof byNameEn.level === "number") return byNameEn.level;
+  if (byNameEn && byNameEn.level === UnspecifiedLevel) return UnspecifiedLevel;
   return undefined;
 }
 

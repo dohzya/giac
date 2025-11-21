@@ -7,7 +7,7 @@ import type { Spec } from "~/core/domain/spec.ts";
 import type { PartialProfile, Profile } from "~/core/domain/profile.ts";
 import { getMissingAxes } from "~/core/domain/profile.ts";
 import { getAxesInPriority, getAxisById } from "~/core/domain/spec.ts";
-import type { AxisId } from "~/core/domain/axis.ts";
+import type { AxisId, Level } from "~/core/domain/axis.ts";
 import type { Language } from "~/core/application/ports/in/build_prompt.ts";
 import { formatAvailableLevels, validateLevelInput } from "./validators.ts";
 import { ExplicitCast } from "~/core/common/explicit_cast.ts";
@@ -21,7 +21,7 @@ async function promptForAxis(
   spec: Spec,
   axisId: AxisId,
   lang: Language,
-): Promise<number | undefined> {
+): Promise<Level | undefined> {
   const axis = getAxisById(spec, axisId);
   if (!axis) return undefined;
 
@@ -66,11 +66,11 @@ export async function buildProfileInteractively(
   const profile: PartialProfile = { ...partial };
 
   for (const axisId of missing) {
-    let level: number | undefined;
+    let level: Level | undefined;
     while (level === undefined) {
       level = await promptForAxis(spec, axisId, lang);
     }
-    ExplicitCast.from<PartialProfile>(profile).cast<Record<string, number>>()[
+    ExplicitCast.from<PartialProfile>(profile).cast<PartialProfile>()[
       axisId
     ] = level;
   }
